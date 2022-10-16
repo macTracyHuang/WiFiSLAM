@@ -1,0 +1,10 @@
+
+<package>
+  <description brief="pointcloud_viewer">
+     pointcloud_viewer package
+  </description>
+  <author>tracy huang</author>
+  <license>TODO</license>
+  <depend package="rosbag"/>
+  <depend package="roscpp"/>
+</package>

@@ -1,0 +1,12 @@
+
+<package>
+  <description brief="wifi_scan">
+     wifi_scan package
+  </description>
+  <author>tracy huang</author>
+  <license>TODO</license>
+  <depend package="rosbag"/>
+  <depend package="roscpp"/>
+  <depend package="std_msgs"/>
+  <depend package="tf"/>
+</package>
