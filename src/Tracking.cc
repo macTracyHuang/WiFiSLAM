@@ -1612,7 +1612,7 @@ Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat 
  */
 Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const double &timestamp, string filename)
 {
-    cout << "GrabImageRGBD"<<endl;
+    Verbose::PrintMess("GrabImageRGBD", Verbose::VERBOSITY_DEBUG);
     mimLeft = imRGB.clone();
     mImGray = imRGB;
     imDepth = imD.clone();
@@ -1659,12 +1659,12 @@ Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, co
 
 /**
  * tm add for wifi
- * 
+ * TODO: instantiate Frame with Wifi Fingerprint
  * 
  */
 Sophus::SE3f Tracking::GrabImageRGBD_Wifi(const cv::Mat &imRGB,const cv::Mat &imD, const Fingerprint &fingerprint, const double &timestamp, string filename)
 {
-    cout << "GrabImageRGBD_Wifi: wifi ap: " << fingerprint.mvAp.size()<<endl;
+    Verbose::PrintMess("GrabImageRGBD_Wifi: wifi ap", Verbose::VERBOSITY_DEBUG);
     mimLeft = imRGB.clone();
     mImGray = imRGB;
     imDepth = imD.clone();
@@ -1689,11 +1689,9 @@ Sophus::SE3f Tracking::GrabImageRGBD_Wifi(const cv::Mat &imRGB,const cv::Mat &im
     if((fabs(mDepthMapFactor-1.0f)>1e-5) && imDepth.type()!=CV_32F)
         imDepth.convertTo(imDepth,CV_32F,mDepthMapFactor);
 
-    // Step 3：构造Frame
+    // Step 3：构造Frame with wifi
     if (mSensor == System::RGBD)
-        mCurrentFrame = Frame(mImGray,imDepth,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,mpCamera);
-    else if(mSensor == System::IMU_RGBD)
-        mCurrentFrame = Frame(mImGray,imDepth,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,mpCamera,&mLastFrame,*mpImuCalib);
+        mCurrentFrame = Frame(mImGray,imDepth,timestamp,fingerprint, mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,mpCamera);
 
     mCurrentFrame.mNameFile = filename;
     mCurrentFrame.mnDataset = mnNumDataset;
@@ -2035,7 +2033,10 @@ void Tracking::ResetFrameIMU()
  */
 void Tracking::Track()
 {
-
+    if (mCurrentFrame.HasWifi())
+        cout << "Track With WiFi Ap: " << mCurrentFrame.mFingerprint.mvAp.size() << endl;
+    else
+        cout << "Track Without WiFi" << endl;
     if (bStepByStep)
     {
         std::cout << "Tracking: Waiting to the next step" << std::endl;

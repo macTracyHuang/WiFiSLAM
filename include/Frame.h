@@ -69,6 +69,11 @@ public:
     // Constructor for Monocular cameras.
     Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extractor,ORBVocabulary* voc, GeometricCamera* pCamera, cv::Mat &distCoef, const float &bf, const float &thDepth, Frame* pPrevF = static_cast<Frame*>(NULL), const IMU::Calib &ImuCalib = IMU::Calib());
 
+
+    // Constructor for RGB-D With WiFi
+    Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeStamp, const Fingerprint &fingerprint,ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth, GeometricCamera* pCamera,Frame* pPrevF = static_cast<Frame*>(NULL), const IMU::Calib &ImuCalib = IMU::Calib());
+
+
     // Destructor
     // ~Frame();
 
@@ -192,9 +197,8 @@ private:
     Eigen::Vector3f mVw;
     bool mbHasVelocity;
 
-    // wifi
-    // Fingerprint mTest;
-    Fingerprint::FingerprintConstPtr mpFingerrint;
+
+    // Fingerprint::FingerprintConstPtr mpFingerrint;
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -309,7 +313,9 @@ public:
     int mnDataset;
 
     // tm add for wifi
-    void SetFingerprint(const Fingerprint::FingerprintConstPtr& fingerprint);
+    Fingerprint mFingerprint;
+    // void SetFingerprint(const Fingerprint &fingerprint);
+    bool HasWifi();
     // tm end add for wifi
 #ifdef REGISTER_TIMES
     double mTimeORB_Ext;

@@ -467,7 +467,7 @@ Sophus::SE3f System::TrackRGBD_Wifi(const cv::Mat &im, const cv::Mat &depthmap, 
 {
     
     if (fingerprint.mvAp.empty())
-        this->TrackRGBD(im, depthmap, timestamp);
+        return this->TrackRGBD(im, depthmap, timestamp);
 
     if(mSensor!=RGBD  && mSensor!=IMU_RGBD)
     {
