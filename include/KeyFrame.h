@@ -308,6 +308,12 @@ public:
     // 建图专用
     cv::Mat imLeftRgb, imRightRgb, imDepth;
     pcl::PointCloud<pcl::PointXYZRGBA>::Ptr mptrPointCloud;
+
+    // tm add for wifi
+    Fingerprint mFingerprint;
+    // void SetFingerprint(const Fingerprint &fingerprint);
+    bool HasWifi();
+
     // The following variables are accesed from only 1 thread or never change (no mutex needed).
 public:
 
@@ -426,7 +432,6 @@ public:
 
     //bool mbHasHessian;
     //cv::Mat mHessianPose;
-
     // The following variables need to be accessed trough a mutex to be thread safe.
 protected:
     // sophus poses

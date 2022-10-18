@@ -2033,10 +2033,11 @@ void Tracking::ResetFrameIMU()
  */
 void Tracking::Track()
 {
-    if (mCurrentFrame.HasWifi())
-        cout << "Track With WiFi Ap: " << mCurrentFrame.mFingerprint.mvAp.size() << endl;
+    bool bHasWifi = mCurrentFrame.HasWifi();
+    if (bHasWifi)
+        Verbose::PrintMess("Track With WiFi", Verbose::VERBOSITY_DEBUG);
     else
-        cout << "Track Without WiFi" << endl;
+        Verbose::PrintMess("Track Without WiFi", Verbose::VERBOSITY_DEBUG);
     if (bStepByStep)
     {
         std::cout << "Tracking: Waiting to the next step" << std::endl;
@@ -2734,6 +2735,11 @@ void Tracking::Track()
         }
 
     }
+
+    // tm update wifi ap pose
+    if (mState == OK)
+        Optimizer::ApOptimization(&mCurrentFrame);
+    // end tm
 
 #ifdef REGISTER_LOOP
     if (Stop()) {

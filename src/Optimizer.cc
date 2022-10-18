@@ -1113,6 +1113,18 @@ int Optimizer::PoseOptimization(Frame *pFrame)
     return nInitialCorrespondences-nBad;
 }
 
+
+/**
+ * @brief tm estimate wifi ap pose
+ * 
+ * @param pFrame 
+ * @return int 
+ */
+int Optimizer::ApOptimization(Frame *pFrame)
+{
+    Fingerprint fp  = pFrame->mFingerprint;
+}
+
 void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap, int& num_fixedKF, int& num_OptKF, int& num_MPs, int& num_edges)
 {
     // Local KeyFrames: First Breath Search from Current Keyframe
@@ -1158,6 +1170,22 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
                 }
         }
     }
+
+    // tm Local Aps seen in Local KeyFrames
+    list<Ap*> lLocalAps;
+    for(list<KeyFrame*>::iterator lit=lLocalKeyFrames.begin() , lend=lLocalKeyFrames.end(); lit!=lend; lit++)
+    {
+        KeyFrame* pKFi = *lit;
+        Fingerprint fingerprint = pKFi->mFingerprint;
+        for(auto &ap:fingerprint.mvAp)
+        {
+            lLocalAps.push_back(ap);
+        }
+    }
+
+    cout << "Local Map Ap Num:" << lLocalAps.size() << endl;
+    cout << "Local Map Ap Unique:" << set<Ap*>(lLocalAps.begin(), lLocalAps.end()).size() << endl;
+    // end tm
 
     // Fixed Keyframes. Keyframes that see Local MapPoints but that are not Local Keyframes
     list<KeyFrame*> lFixedCameras;

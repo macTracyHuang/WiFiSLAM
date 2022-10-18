@@ -37,4 +37,21 @@ std::string Ap::GetBssid()
     return mBssid;
 }
 
+int Ap::GetNumOfObserved()
+{
+    std::unique_lock<std::mutex> lock(mMutexFeatures);
+    return mNumOfObserved;
+}
+
+void Ap::AddNumOfObserved()
+{
+    std::unique_lock<std::mutex> lock(mMutexFeatures);
+    mNumOfObserved++;
+}
+
+void Ap::ResetNumOfObserved()
+{
+    std::unique_lock<std::mutex> lock(mMutexFeatures);
+    mNumOfObserved = 0;
+}
 } //namespace ORB_SLAM

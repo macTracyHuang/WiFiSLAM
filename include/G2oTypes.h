@@ -977,6 +977,57 @@ public:
     Eigen::Vector3d dtij;
 };
 
-} // namespace ORB_SLAM2
+
+//tm add for wifi
+class ApVertex: public g2o::BaseVertex<3, Eigen::Vector3d>
+{
+    public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    ApVertex(){}
+
+    virtual void setOriginImpl()
+    {
+        _estimate << 0,0,0;
+    }
+    virtual void oplusImpl(const double* update) override
+    {
+        _estimate += Eigen::Vector3d(update);
+    }
+
+    virtual bool read(std::istream& is) {}
+    virtual bool write(std::ostream& os) const {}
+};
+
+// class ApEdge: public g2o::BaseBinaryEdge<1, double, Eigen::Vector3f, g2o::VertexSE3Expmap>
+// {
+//     public:
+//     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+//     double _x;      
+//     ApEdge(double x): BaseBinaryEdge(), _x(x) {};     
+   
+//     virtual void computeError() override
+//     {
+//         // ...
+//         // _error = _measurement - Something;
+//     }      
+//     // virtual void linearizeOplus() override
+//     // {
+//     //     _jacobianOplusXi(pos, pos) = something;
+//     //     // ...         
+//     //     /*
+//     //     _jocobianOplusXj(pos, pos) = something;
+//     //     ...
+//     //     */
+//     // }
+
+//     virtual bool read(istream& in) {}
+//     virtual bool write(ostream& out) const {}
+
+//     private:
+//     // data
+// };
+//end tm
+} // namespace ORB_SLAM3
 
 #endif // G2OTYPES_H

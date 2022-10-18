@@ -32,21 +32,22 @@ class Ap
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    Ap():mApPos(Eigen::Vector3f()), mBssid(""){}
-    Ap(const std::string &Bssid):mApPos(Eigen::Vector3f()),mBssid(Bssid){}
-    Ap(const Eigen::Vector3f &Pos, const std::string &Bssid):mApPos(Pos),mBssid(Bssid){}
+    Ap():mApPos(Eigen::Vector3f()), mBssid(""), mNumOfObserved(0){}
+    Ap(const std::string &Bssid):mApPos(Eigen::Vector3f()),mBssid(Bssid), mNumOfObserved(0){}
+    Ap(const Eigen::Vector3f &Pos, const std::string &Bssid):mApPos(Pos),mBssid(Bssid), mNumOfObserved(0){}
 
     // Copy constructor.
-    Ap(const Ap &ap):mApPos(ap.mApPos), mBssid(ap.mBssid){}
+    Ap(const Ap &ap):mApPos(ap.mApPos), mBssid(ap.mBssid), mNumOfObserved(ap.mNumOfObserved){}
 
     // move constructor
-    Ap(Ap&& ap) : mApPos(std::move(ap.mApPos)), mBssid(ap.mBssid) {}
+    Ap(Ap&& ap) : mApPos(std::move(ap.mApPos)), mBssid(ap.mBssid),mNumOfObserved(ap.mNumOfObserved) {}
 
     // copy assignment
     Ap& operator=(const Ap& rhs) {
         if (this != &rhs) { // 檢查自我賦值
             mApPos = rhs.mApPos;
             mBssid = rhs.mBssid;
+            mNumOfObserved = rhs.mNumOfObserved;
         }
         return *this;
     }
@@ -56,6 +57,7 @@ public:
         if (this != &rhs) { // 檢查自我賦值
             mApPos = std::move(rhs.mApPos);
             mBssid = rhs.mBssid;
+            mNumOfObserved = rhs.mNumOfObserved;
         }
 
         return *this;
@@ -69,13 +71,20 @@ public:
     void SetBssid(const std::string &Bssid);
     std::string GetBssid();
     static std::mutex mApGlobalMutex;
+    int GetNumOfObserved();
+    void AddNumOfObserved();
+    void ResetNumOfObserved();
 protected:
     // Position in absolute coordinates
     Eigen::Vector3f mApPos;
     std::string mBssid;
-
+    int mNumOfObserved;
+    
     // Mutex
     std::mutex mMutexApPos;
+    std::mutex mMutexFeatures;
+    
+
 // private:
 };
 }

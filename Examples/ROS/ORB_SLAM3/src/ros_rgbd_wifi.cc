@@ -32,7 +32,7 @@
 #include<opencv2/core/core.hpp>
 
 #include"../../../include/System.h"
-#include"../../Thirdparty/wifi_scan/msg_gen/cpp/include/wifi_scan/Fingerprint.h"
+#include"../../../../Thirdparty/wifi_scan/msg_gen/cpp/include/wifi_scan/Fingerprint.h"
 
 using namespace std;
 
