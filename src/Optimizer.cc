@@ -1126,7 +1126,7 @@ int Optimizer::ApOptimization(KeyFrame *pKF)
     // only add ap for optimization when ap->AddNumOfObserved() > threshold, erase AddNumOfObserved() each time?
     Verbose::PrintMess("ApOptimization", Verbose::VERBOSITY_DEBUG);
     int threshold = 5;
-    unordered_set<Ap*> sLocalAps;
+    set<boost::shared_ptr< ::ORB_SLAM3::Ap>> sLocalAps;
     if (!pKF->bHasWifi)
         return 0;
     for(auto ap:pKF->mpFingerprint->mvAp)

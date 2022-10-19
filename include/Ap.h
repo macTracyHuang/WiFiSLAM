@@ -81,9 +81,6 @@ public:
     void AddObservation(KeyFrame* pKF);
     void EraseObservation(KeyFrame* pKF);
     int nObs;
-    //smart pointers
-    typedef boost::shared_ptr< ::ORB_SLAM3::Ap> ApPtr;
-    typedef boost::shared_ptr< ::ORB_SLAM3::Ap const> ApConstPtr;
 protected:
     // Position in absolute coordinates
     Eigen::Vector3f mApPos;

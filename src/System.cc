@@ -1529,19 +1529,19 @@ vector<MapPoint*> System::GetTrackedMapPoints()
 }
 
 // tm add for wifi
-vector<Ap*> System::GetAllAps()
+vector<boost::shared_ptr< ::ORB_SLAM3::Ap>> System::GetAllAps()
 {
     unique_lock<mutex> lock(mMutexAllAps);
     return mAllAps;
 }
 
-void System::AddNewAp(Ap* const newAp)
+void System::AddNewAp(boost::shared_ptr< ::ORB_SLAM3::Ap> const newAp)
 {
     unique_lock<mutex> lock(mMutexAllAps);
     mAllAps.push_back(newAp);
 }
 
-Ap* System::GetApByBssid(string &bssid)
+boost::shared_ptr< ::ORB_SLAM3::Ap> System::GetApByBssid(string &bssid)
 {
     unique_lock<mutex> lock(mMutexAllAps);
     for (auto ap:mAllAps)

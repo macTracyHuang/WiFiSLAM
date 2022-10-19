@@ -36,7 +36,7 @@ class Fingerprint
 {
 public:
     Fingerprint():mvAp(), mvRssi(){}
-    Fingerprint(const vector<Ap*> &ap, const vector<int> &rssi) :mvAp(ap), mvRssi(rssi){}
+    Fingerprint(const vector<boost::shared_ptr< ::ORB_SLAM3::Ap>> &ap, const vector<int> &rssi) :mvAp(ap), mvRssi(rssi){}
     
     // Copy constructor.
     Fingerprint(const Fingerprint &fp):mvAp(fp.mvAp), mvRssi(fp.mvRssi){}
@@ -65,11 +65,11 @@ public:
     
     ~Fingerprint(){}
 
-    vector<Ap*> mvAp;
+    vector<boost::shared_ptr< ::ORB_SLAM3::Ap>> mvAp;
     vector<int> mvRssi;
     static std::mutex mFingerprintGlobalMutex;
-    typedef boost::shared_ptr< ::ORB_SLAM3::Fingerprint> FingerprintPtr;
-    typedef boost::shared_ptr< ::ORB_SLAM3::Fingerprint const> FingerprintConstPtr;
+    typedef boost::shared_ptr<Fingerprint> FingerprintPtr;
+    typedef boost::shared_ptr<Fingerprint const> FingerprintConstPtr;
 protected:
     // Mutex
     std::mutex mMutexFingerprint;

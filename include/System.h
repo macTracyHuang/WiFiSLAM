@@ -205,9 +205,9 @@ public:
 
     // tm - for wifi    
     int GetWifiMode();
-    std::vector<Ap*> GetAllAps();
-    void AddNewAp(Ap* const newAp);
-    Ap* GetApByBssid(string &bssid);
+    std::vector<boost::shared_ptr< ::ORB_SLAM3::Ap>> GetAllAps();
+    void AddNewAp(boost::shared_ptr< ::ORB_SLAM3::Ap> const newAp);
+    boost::shared_ptr< ::ORB_SLAM3::Ap> GetApByBssid(string &bssid);
 
 #ifdef REGISTER_TIMES
     void InsertRectTime(double& time);
@@ -295,7 +295,7 @@ private:
 
     // tm for wifi
     std::mutex mMutexAllAps;
-    std::vector<Ap*> mAllAps;
+    std::vector<boost::shared_ptr< ::ORB_SLAM3::Ap>> mAllAps;
 };
 
 }// namespace ORB_SLAM

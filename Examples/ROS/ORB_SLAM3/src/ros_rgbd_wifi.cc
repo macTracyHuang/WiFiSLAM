@@ -243,10 +243,10 @@ ORB_SLAM3::Fingerprint* WiFiGrabber::msgToFp(const wifi_scan::FingerprintConstPt
     {
         string bssid = addrssi.address;
         int rssi = addrssi.rssi;
-        ORB_SLAM3::Ap* ap =  mpSLAM->GetApByBssid(bssid);
+        boost::shared_ptr< ::ORB_SLAM3::Ap> ap =  mpSLAM->GetApByBssid(bssid);
         if (!ap)
         {
-            ORB_SLAM3::Ap* mpNewAp = new ORB_SLAM3::Ap(bssid);
+            boost::shared_ptr< ::ORB_SLAM3::Ap> mpNewAp(new ORB_SLAM3::Ap(bssid));
             mpSLAM->AddNewAp(mpNewAp);
             mpNewAp->nObs = 1;
             fingerprint->mvAp.push_back(mpNewAp);
