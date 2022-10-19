@@ -1662,7 +1662,7 @@ Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, co
  * TODO: instantiate Frame with Wifi Fingerprint
  * 
  */
-Sophus::SE3f Tracking::GrabImageRGBD_Wifi(const cv::Mat &imRGB,const cv::Mat &imD, Fingerprint*fingerprint, const double &timestamp, string filename)
+Sophus::SE3f Tracking::GrabImageRGBD_Wifi(const cv::Mat &imRGB,const cv::Mat &imD, const Fingerprint::FingerprintPtr& fingerprint, const double &timestamp, string filename)
 {
     Verbose::PrintMess("GrabImageRGBD_Wifi: wifi ap", Verbose::VERBOSITY_DEBUG);
     mimLeft = imRGB.clone();

@@ -309,7 +309,7 @@ public:
     pcl::PointCloud<pcl::PointXYZRGBA>::Ptr mptrPointCloud;
 
     // tm add for wifi
-    Fingerprint* mpFingerprint;
+    Fingerprint::FingerprintPtr mpFingerprint;
     // void SetFingerprint(const Fingerprint &fingerprint);
     bool bHasWifi;
 

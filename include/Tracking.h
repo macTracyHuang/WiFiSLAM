@@ -74,7 +74,7 @@ public:
     Sophus::SE3f GrabImageMonocular(const cv::Mat &im, const double &timestamp, string filename);
 
     // tm add for wifi
-    Sophus::SE3f GrabImageRGBD_Wifi(const cv::Mat &imRGB,const cv::Mat &imD, Fingerprint* fingerprint, const double &timestamp, string filename);
+    Sophus::SE3f GrabImageRGBD_Wifi(const cv::Mat &imRGB,const cv::Mat &imD, const Fingerprint::FingerprintPtr& fingerprint, const double &timestamp, string filename);
     // end tm
 
     void GrabImuData(const IMU::Point &imuMeasurement);
