@@ -1124,9 +1124,12 @@ int Optimizer::ApOptimization(KeyFrame *pKF)
 {
     // tm Local Aps seen in Local KeyFrames add for wifi
     // only add ap for optimization when ap->AddNumOfObserved() > threshold, erase AddNumOfObserved() each time?
+    Verbose::PrintMess("ApOptimization", Verbose::VERBOSITY_DEBUG);
     int threshold = 5;
     unordered_set<Ap*> sLocalAps;
-    for(auto ap:pKF->mFingerprint.mvAp)
+    if (!pKF->bHasWifi)
+        return 0;
+    for(auto ap:pKF->mpFingerprint->mvAp)
     {
         if(ap->Observations() >= threshold)
             sLocalAps.insert(ap);
@@ -1523,7 +1526,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
 
 
     // tm add for wifi
-    // ApOptimization(pKF);
+    ApOptimization(pKF);
 }
 
 

@@ -35,21 +35,22 @@ class Ap
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    Ap():mApPos(Eigen::Vector3f()), mBssid(""),mObservations(std::set<KeyFrame*>()){}
-    Ap(const std::string &Bssid):mApPos(Eigen::Vector3f()),mBssid(Bssid),mObservations(std::set<KeyFrame*>()){}
-    Ap(const Eigen::Vector3f &Pos, const std::string &Bssid):mApPos(Pos),mBssid(Bssid),mObservations(std::set<KeyFrame*>()){}
+    Ap():mApPos(Eigen::Vector3f()), mBssid(""),mObservations(std::set<KeyFrame*>()),nObs(0){}
+    Ap(const std::string &Bssid):mApPos(Eigen::Vector3f()),mBssid(Bssid),mObservations(std::set<KeyFrame*>()),nObs(0){}
+    Ap(const Eigen::Vector3f &Pos, const std::string &Bssid):mApPos(Pos),mBssid(Bssid),mObservations(std::set<KeyFrame*>()),nObs(0){}
 
     // Copy constructor.
-    Ap(const Ap &ap):mApPos(ap.mApPos), mBssid(ap.mBssid), mObservations(ap.mObservations){}
+    Ap(const Ap &ap):mApPos(ap.mApPos), mBssid(ap.mBssid), mObservations(ap.mObservations),nObs(ap.nObs){}
 
     // move constructor
-    Ap(Ap&& ap) : mApPos(std::move(ap.mApPos)), mBssid(ap.mBssid),mObservations(ap.mObservations) {}
+    Ap(Ap&& ap) : mApPos(std::move(ap.mApPos)), mBssid(ap.mBssid),mObservations(ap.mObservations),nObs(ap.nObs) {}
 
     // copy assignment
     Ap& operator=(const Ap& rhs) {
         if (this != &rhs) { // 檢查自我賦值
             mApPos = rhs.mApPos;
             mBssid = rhs.mBssid;
+            nObs = rhs.nObs;
             mObservations = rhs.mObservations;
         }
         return *this;
@@ -60,6 +61,7 @@ public:
         if (this != &rhs) { // 檢查自我賦值
             mApPos = std::move(rhs.mApPos);
             mBssid = rhs.mBssid;
+            nObs = rhs.nObs;
             mObservations = rhs.mObservations;
         }
 
@@ -69,7 +71,7 @@ public:
 
     ~Ap(){}
 
-    int nObs;
+    
 
     void SetApPos(const Eigen::Vector3f &Pos);
     Eigen::Vector3f GetApPos();
@@ -89,6 +91,7 @@ protected:
     // Mutex
     std::mutex mMutexApPos;
     std::mutex mMutexApFeatures;
+    int nObs;
     
 
 // private:

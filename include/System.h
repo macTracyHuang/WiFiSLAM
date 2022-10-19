@@ -123,7 +123,7 @@ public:
 
     // tm add for wifi
     // Sophus::SE3f TrackRGBD_Wifi(const cv::Mat &im, const cv::Mat &depthmap, const double &timestamp, const vector<IMU::Point>& vImuMeas = vector<IMU::Point>(), string filename="", const Fingerprint &fingerprint = Fingerprint());
-    Sophus::SE3f TrackRGBD_Wifi(const cv::Mat &im, const cv::Mat &depthmap, const double &timestamp, const Fingerprint& fingerprint, const vector<IMU::Point>& vImuMeas = vector<IMU::Point>(), string filename="");
+    Sophus::SE3f TrackRGBD_Wifi(const cv::Mat &im, const cv::Mat &depthmap, const double &timestamp, Fingerprint* fingerprint, const vector<IMU::Point>& vImuMeas = vector<IMU::Point>(), string filename="");
     // Proccess the given monocular frame and optionally imu data
     // Input images: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.
     // Returns the camera pose (empty if tracking fails).
@@ -178,6 +178,9 @@ public:
     // Call first Shutdown()
     // See format details at: http://www.cvlibs.net/datasets/kitti/eval_odometry.php
     void SaveTrajectoryKITTI(const string &filename);
+    
+    // tm add for wifi
+    void SaveApInfo(const string &filename);
 
     // TODO: Save/Load functions
     // SaveMap(const string &filename);

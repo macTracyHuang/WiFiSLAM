@@ -345,11 +345,11 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeSt
 
 //RGBD with wifi
 // RGBD
-Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeStamp, const Fingerprint &fingerprint, ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth, GeometricCamera* pCamera,Frame* pPrevF, const IMU::Calib &ImuCalib)
+Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeStamp, Fingerprint* fingerprint, ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth, GeometricCamera* pCamera,Frame* pPrevF, const IMU::Calib &ImuCalib)
     :mpcpi(NULL),mpORBvocabulary(voc),mpORBextractorLeft(extractor),mpORBextractorRight(static_cast<ORBextractor*>(NULL)),
      mTimeStamp(timeStamp), mK(K.clone()), mK_(Converter::toMatrix3f(K)),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth),
      mImuCalib(ImuCalib), mpImuPreintegrated(NULL), mpPrevFrame(pPrevF), mpImuPreintegratedFrame(NULL), mpReferenceKF(static_cast<KeyFrame*>(NULL)), mbIsSet(false), mbImuPreintegrated(false),
-     mpCamera(pCamera),mpCamera2(nullptr), mbHasPose(false), mbHasVelocity(false), mFingerprint(fingerprint)
+     mpCamera(pCamera),mpCamera2(nullptr), mbHasPose(false), mbHasVelocity(false), mpFingerprint(fingerprint)
 {
     // Frame ID
     // Step 1 帧的ID 自增
@@ -1822,7 +1822,11 @@ Eigen::Vector3f Frame::UnprojectStereoFishEye(const int &i){
 
 bool Frame::HasWifi()
 {
-    return this->mFingerprint.mvAp.size() > 0;
+    // cout << "has wifi()" <<endl;
+    if (mpFingerprint)
+        return this->mpFingerprint->mvAp.size() > 0;
+    else
+        return false;
 }
 
 } //namespace ORB_SLAM

@@ -463,10 +463,10 @@ Sophus::SE3f System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const
  * 
  * 
  */
-Sophus::SE3f System::TrackRGBD_Wifi(const cv::Mat &im, const cv::Mat &depthmap, const double &timestamp, const Fingerprint& fingerprint, const vector<IMU::Point>& vImuMeas, string filename)
+Sophus::SE3f System::TrackRGBD_Wifi(const cv::Mat &im, const cv::Mat &depthmap, const double &timestamp, Fingerprint* fingerprint, const vector<IMU::Point>& vImuMeas, string filename)
 {
     
-    if (fingerprint.mvAp.empty())
+    if (fingerprint->mvAp.empty())
         return this->TrackRGBD(im, depthmap, timestamp);
 
     if(mSensor!=RGBD  && mSensor!=IMU_RGBD)
@@ -740,6 +740,27 @@ bool System::isShutDown()
 {
     unique_lock<mutex> lock(mMutexReset);
     return mbShutDown;
+}
+
+/**
+ * @brief save ap information
+ * 
+ * @param filename 
+ */
+void System::SaveApInfo(const string &filename)
+{
+    cout << endl << "Saving Ap information to " << filename << " ..." << endl;
+    ofstream f;
+    f.open(filename.c_str());
+    f << fixed;
+    int count = 1;
+    for (auto &ap:mAllAps)
+    {
+        f << count << ". Address: " << ap->GetBssid() << endl << "Obs: " << ap->Observations() << endl;
+        f << "*************"<<endl;
+        count++; 
+    }
+    f.close();
 }
 
 void System::SaveTrajectoryTUM(const string &filename)

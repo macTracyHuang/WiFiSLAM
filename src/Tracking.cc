@@ -1662,7 +1662,7 @@ Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, co
  * TODO: instantiate Frame with Wifi Fingerprint
  * 
  */
-Sophus::SE3f Tracking::GrabImageRGBD_Wifi(const cv::Mat &imRGB,const cv::Mat &imD, const Fingerprint &fingerprint, const double &timestamp, string filename)
+Sophus::SE3f Tracking::GrabImageRGBD_Wifi(const cv::Mat &imRGB,const cv::Mat &imD, Fingerprint*fingerprint, const double &timestamp, string filename)
 {
     Verbose::PrintMess("GrabImageRGBD_Wifi: wifi ap", Verbose::VERBOSITY_DEBUG);
     mimLeft = imRGB.clone();
@@ -2033,12 +2033,13 @@ void Tracking::ResetFrameIMU()
  */
 void Tracking::Track()
 {
+    Verbose::PrintMess("Start Track()", Verbose::VERBOSITY_DEBUG);
     bool bHasWifi = mCurrentFrame.HasWifi();
     if (bHasWifi)
     {
         Verbose::PrintMess("Track With WiFi", Verbose::VERBOSITY_DEBUG);
-        cout << "test lock" <<endl;
-        cout << mCurrentFrame.mFingerprint.mvAp[0]->Observations() <<endl;
+        // cout << "test lock" <<endl;
+        // cout << mCurrentFrame.mpFingerprint->mvAp[0]->Observations() <<endl;
     }
     else
         Verbose::PrintMess("Track Without WiFi", Verbose::VERBOSITY_DEBUG);
@@ -4099,12 +4100,12 @@ void Tracking::CreateNewKeyFrame()
     // // tm add for wifi add new ap obervation
     // if (mCurrentFrame.HasWifi())
     // {
-    //     cout << "mvap: " << mCurrentFrame.mFingerprint.mvAp.size() <<endl;
-    //     for (auto &ap:mCurrentFrame.mFingerprint.mvAp)
+    //     cout << "mvap: " << mCurrentFrame.mpFingerprint->mvAp.size() <<endl;
+    //     for (auto &ap:mCurrentFrame.mpFingerprint->mvAp)
     //     {
-    //         cout << ap->Observations() <<endl;
-    //         // ap->AddObservation(pKF);
-    //         // cout <<"new obs " << ap->GetBssid() << ":" << ap->Observations() << endl;
+    //         // cout << ap->Observations() <<endl;
+    //         ap->AddObservation(pKF);
+    //         cout <<"new obs " << ap->GetBssid() << ":" << ap->Observations() << endl;
     //     }
     // } 
 }

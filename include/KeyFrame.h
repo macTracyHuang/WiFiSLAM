@@ -309,9 +309,9 @@ public:
     pcl::PointCloud<pcl::PointXYZRGBA>::Ptr mptrPointCloud;
 
     // tm add for wifi
-    Fingerprint mFingerprint;
+    Fingerprint* mpFingerprint;
     // void SetFingerprint(const Fingerprint &fingerprint);
-    bool HasWifi();
+    bool bHasWifi;
 
     // The following variables are accesed from only 1 thread or never change (no mutex needed).
 public:

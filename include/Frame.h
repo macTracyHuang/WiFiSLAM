@@ -71,7 +71,7 @@ public:
 
 
     // Constructor for RGB-D With WiFi
-    Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeStamp, const Fingerprint &fingerprint,ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth, GeometricCamera* pCamera,Frame* pPrevF = static_cast<Frame*>(NULL), const IMU::Calib &ImuCalib = IMU::Calib());
+    Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeStamp, Fingerprint* ,ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth, GeometricCamera* pCamera,Frame* pPrevF = static_cast<Frame*>(NULL), const IMU::Calib &ImuCalib = IMU::Calib());
 
 
     // Destructor
@@ -313,7 +313,7 @@ public:
     int mnDataset;
 
     // tm add for wifi
-    Fingerprint mFingerprint;
+    Fingerprint* mpFingerprint;
     // void SetFingerprint(const Fingerprint &fingerprint);
     bool HasWifi();
     // tm end add for wifi

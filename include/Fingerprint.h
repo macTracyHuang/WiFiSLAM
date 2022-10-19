@@ -37,6 +37,7 @@ class Fingerprint
 public:
     Fingerprint():mvAp(), mvRssi(){}
     Fingerprint(const vector<Ap*> &ap, const vector<int> &rssi) :mvAp(ap), mvRssi(rssi){}
+    
     // Copy constructor.
     Fingerprint(const Fingerprint &fp):mvAp(fp.mvAp), mvRssi(fp.mvRssi){}
 

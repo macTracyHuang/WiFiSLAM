@@ -46,7 +46,8 @@ public:
     queue<wifi_scan::FingerprintConstPtr> wifiBuf;
     std::mutex mBufMutex;
     ORB_SLAM3::System* mpSLAM;
-    ORB_SLAM3::Fingerprint msgToFp(const wifi_scan::FingerprintConstPtr& msgWifi);
+    // ORB_SLAM3::Fingerprint msgToFp(const wifi_scan::FingerprintConstPtr& msgWifi);
+    ORB_SLAM3::Fingerprint* msgToFp(const wifi_scan::FingerprintConstPtr& msgWifi);
 };
 
 class ImageGrabber
@@ -105,7 +106,7 @@ int main(int argc, char **argv)
 
     // Save camera trajectory
     // SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
-    
+    SLAM.SaveApInfo("APINFO.txt");
     // SLAM.SavePointcloudMap();
 
     ros::shutdown();
@@ -233,10 +234,10 @@ void WiFiGrabber::GrabWifi(const wifi_scan::FingerprintConstPtr& msgWifi)
     mBufMutex.unlock();
 }
 
-ORB_SLAM3::Fingerprint WiFiGrabber::msgToFp(const wifi_scan::FingerprintConstPtr& msgWifi)
+ORB_SLAM3::Fingerprint* WiFiGrabber::msgToFp(const wifi_scan::FingerprintConstPtr& msgWifi)
 {
 
-    ORB_SLAM3::Fingerprint fingerprint = ORB_SLAM3::Fingerprint();
+    ORB_SLAM3::Fingerprint* fingerprint = new ORB_SLAM3::Fingerprint();
 
     for (auto &addrssi: msgWifi->list)
     {
@@ -249,8 +250,8 @@ ORB_SLAM3::Fingerprint WiFiGrabber::msgToFp(const wifi_scan::FingerprintConstPtr
             mpSLAM->AddNewAp(mpNewAp);
             ap = mpNewAp;
         }
-        fingerprint.mvAp.push_back(ap);
-        fingerprint.mvRssi.push_back(rssi);
+        fingerprint->mvAp.push_back(ap);
+        fingerprint->mvRssi.push_back(rssi);
     }
 
     return fingerprint;
