@@ -41,7 +41,7 @@ std::string Ap::GetBssid()
  */
 int Ap::Observations()
 {
-    std::unique_lock<std::mutex> lock(mMutexApFeatures);
+    std::unique_lock<std::mutex> lock(mMutexFeatures);
     return nObs;
 }
 
@@ -49,14 +49,14 @@ int Ap::Observations()
 
 void Ap::AddObservation(KeyFrame* pKF)
 {
-    std::unique_lock<std::mutex> lock(mMutexApFeatures);
+    std::unique_lock<std::mutex> lock(mMutexFeatures);
     mObservations.insert(pKF);
     nObs++;
 }
 
 void Ap::EraseObservation(KeyFrame* pKF)
 {
-    std::unique_lock<std::mutex> lock(mMutexApFeatures);
+    std::unique_lock<std::mutex> lock(mMutexFeatures);
     mObservations.erase(pKF);
     nObs--;
 }

@@ -4097,17 +4097,16 @@ void Tracking::CreateNewKeyFrame()
     mnLastKeyFrameId = mCurrentFrame.mnId;
     mpLastKeyFrame = pKF;
 
-    // // tm add for wifi add new ap obervation
-    // if (mCurrentFrame.HasWifi())
-    // {
-    //     cout << "mvap: " << mCurrentFrame.mpFingerprint->mvAp.size() <<endl;
-    //     for (auto &ap:mCurrentFrame.mpFingerprint->mvAp)
-    //     {
-    //         // cout << ap->Observations() <<endl;
-    //         ap->AddObservation(pKF);
-    //         cout <<"new obs " << ap->GetBssid() << ":" << ap->Observations() << endl;
-    //     }
-    // } 
+    // tm add for wifi add new ap obervation
+    if (mCurrentFrame.HasWifi())
+    {
+        // cout << "mvap: " << mCurrentFrame.mpFingerprint->mvAp.size() <<endl;
+        for (auto &ap:mCurrentFrame.mpFingerprint->mvAp)
+        {
+            ap->AddObservation(pKF);
+            // cout <<"new obs " << ap->GetBssid() << ":" << ap->Observations() << endl;
+        }
+    } 
 }
 
 /**

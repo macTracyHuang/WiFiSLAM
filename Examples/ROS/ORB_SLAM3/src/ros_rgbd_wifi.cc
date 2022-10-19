@@ -248,10 +248,16 @@ ORB_SLAM3::Fingerprint* WiFiGrabber::msgToFp(const wifi_scan::FingerprintConstPt
         {
             ORB_SLAM3::Ap* mpNewAp = new ORB_SLAM3::Ap(bssid);
             mpSLAM->AddNewAp(mpNewAp);
-            ap = mpNewAp;
+            mpNewAp->nObs = 1;
+            fingerprint->mvAp.push_back(mpNewAp);
+            fingerprint->mvRssi.push_back(rssi);
         }
-        fingerprint->mvAp.push_back(ap);
-        fingerprint->mvRssi.push_back(rssi);
+        else
+        {
+            fingerprint->mvAp.push_back(ap);
+            fingerprint->mvRssi.push_back(rssi);
+        }
+
     }
 
     return fingerprint;
