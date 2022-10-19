@@ -21,7 +21,7 @@
 #define FINGERPRINT_H
 
 // #include "System.h"
-#include "Ap.h"
+// #include "Ap.h"
 #include <mutex>
 // using namespace ORB_SLAM3;
 
@@ -29,6 +29,8 @@
 
 namespace ORB_SLAM3
 {
+
+class Ap;
 
 class Fingerprint
 {

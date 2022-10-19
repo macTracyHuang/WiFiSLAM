@@ -979,54 +979,70 @@ public:
 
 
 //tm add for wifi
-class ApVertex: public g2o::BaseVertex<3, Eigen::Vector3d>
-{
-    public:
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-    ApVertex(){}
-
-    virtual void setOriginImpl()
-    {
-        _estimate << 0,0,0;
-    }
-    virtual void oplusImpl(const double* update) override
-    {
-        _estimate += Eigen::Vector3d(update);
-    }
-
-    virtual bool read(std::istream& is) {}
-    virtual bool write(std::ostream& os) const {}
-};
-
-// class ApEdge: public g2o::BaseBinaryEdge<1, double, Eigen::Vector3f, g2o::VertexSE3Expmap>
+// g2o::VertexSBAPointXYZ can be use as Ap vertex
+// class ApVertex: public g2o::BaseVertex<3, Eigen::Vector3d>
 // {
 //     public:
 //     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-//     double _x;      
-//     ApEdge(double x): BaseBinaryEdge(), _x(x) {};     
-   
-//     virtual void computeError() override
+
+//     ApVertex(){}
+
+//     virtual void setOriginImpl()
 //     {
-//         // ...
-//         // _error = _measurement - Something;
-//     }      
-//     // virtual void linearizeOplus() override
-//     // {
-//     //     _jacobianOplusXi(pos, pos) = something;
-//     //     // ...         
-//     //     /*
-//     //     _jocobianOplusXj(pos, pos) = something;
-//     //     ...
-//     //     */
-//     // }
+//         _estimate << 0,0,0;
+//     }
+//     virtual void oplusImpl(const double* update) override
+//     {
+//         _estimate += Eigen::Vector3d(update);
+//     }
 
-//     virtual bool read(istream& in) {}
-//     virtual bool write(ostream& out) const {}
-
-//     private:
-//     // data
+//     virtual bool read(std::istream& is) {}
+//     virtual bool write(std::ostream& os) const {}
 // };
+
+class ApEdge: public g2o::BaseBinaryEdge<1, double, g2o::VertexSBAPointXYZ, g2o::VertexSE3Expmap>
+{
+    public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    double _x;      
+    ApEdge(double x): BaseBinaryEdge(), _x(x) {};     
+   
+    virtual void computeError() override
+    {
+        // Camera Pos
+        const g2o::VertexSE3Expmap* cam_vertex = static_cast<const g2o::VertexSE3Expmap*>(_vertices[1]);
+        auto camPos = cam_vertex->estimate();
+        // Ap Pos
+        const g2o::VertexSBAPointXYZ* ap_vertex= static_cast<const g2o::VertexSBAPointXYZ*>(_vertices[0]);
+        auto apPos = ap_vertex->estimate();
+
+        // RSSI Prediction Based on P(r) = P(r0) - 10 * alpha * log(r/r0)
+        // P(r) = C - 10 * alpha * log(r)
+        // C = P(r0) - log(r0) , r = 10^((C-P(r) / (10 * alpha))
+        // Assume r0 = 1 P(1) = 20
+        int C = 20, alpha = 5;
+        double r = sqrt(pow((apPos[0] - camPos[0]),2) + pow((apPos[1] - camPos[1]),2) + pow((apPos[2] - camPos[2]),2));
+        double prediction = C - 10 * alpha * log(r);
+
+        double obs(_measurement);
+        _error(0,0) =  obs - prediction;
+    }      
+    // virtual void linearizeOplus() override
+    // {
+    //     _jacobianOplusXi(pos, pos) = something;
+    //     // ...         
+    //     /*
+    //     _jocobianOplusXj(pos, pos) = something;
+    //     ...
+    //     */
+    // }
+
+    virtual bool read(istream& in) {}
+    virtual bool write(ostream& out) const {}
+
+    private:
+    // data
+};
 //end tm
 } // namespace ORB_SLAM3
 

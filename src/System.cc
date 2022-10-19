@@ -463,7 +463,7 @@ Sophus::SE3f System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const
  * 
  * 
  */
-Sophus::SE3f System::TrackRGBD_Wifi(const cv::Mat &im, const cv::Mat &depthmap, const double &timestamp, const Fingerprint &fingerprint, const vector<IMU::Point>& vImuMeas, string filename)
+Sophus::SE3f System::TrackRGBD_Wifi(const cv::Mat &im, const cv::Mat &depthmap, const double &timestamp, const Fingerprint& fingerprint, const vector<IMU::Point>& vImuMeas, string filename)
 {
     
     if (fingerprint.mvAp.empty())

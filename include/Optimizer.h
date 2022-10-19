@@ -61,7 +61,7 @@ public:
     int static PoseInertialOptimizationLastFrame(Frame *pFrame, bool bRecInit = false);
 
     // tm add for wifi
-    int static ApOptimization(Frame* pFrame);
+    int static ApOptimization(KeyFrame *pKF);
     //end tm
 
     // if bFixScale is true, 6DoF optimization (stereo,rgbd), 7DoF otherwise (mono)

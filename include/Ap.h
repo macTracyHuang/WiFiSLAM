@@ -23,7 +23,10 @@
 
 #include <mutex>
 #include<Eigen/Dense>
+#include "KeyFrame.h"
+
 // using namespace std;
+
 
 namespace ORB_SLAM3
 {
@@ -32,22 +35,22 @@ class Ap
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    Ap():mApPos(Eigen::Vector3f()), mBssid(""), mNumOfObserved(0){}
-    Ap(const std::string &Bssid):mApPos(Eigen::Vector3f()),mBssid(Bssid), mNumOfObserved(0){}
-    Ap(const Eigen::Vector3f &Pos, const std::string &Bssid):mApPos(Pos),mBssid(Bssid), mNumOfObserved(0){}
+    Ap():mApPos(Eigen::Vector3f()), mBssid(""),mObservations(std::set<KeyFrame*>()){}
+    Ap(const std::string &Bssid):mApPos(Eigen::Vector3f()),mBssid(Bssid),mObservations(std::set<KeyFrame*>()){}
+    Ap(const Eigen::Vector3f &Pos, const std::string &Bssid):mApPos(Pos),mBssid(Bssid),mObservations(std::set<KeyFrame*>()){}
 
     // Copy constructor.
-    Ap(const Ap &ap):mApPos(ap.mApPos), mBssid(ap.mBssid), mNumOfObserved(ap.mNumOfObserved){}
+    Ap(const Ap &ap):mApPos(ap.mApPos), mBssid(ap.mBssid), mObservations(ap.mObservations){}
 
     // move constructor
-    Ap(Ap&& ap) : mApPos(std::move(ap.mApPos)), mBssid(ap.mBssid),mNumOfObserved(ap.mNumOfObserved) {}
+    Ap(Ap&& ap) : mApPos(std::move(ap.mApPos)), mBssid(ap.mBssid),mObservations(ap.mObservations) {}
 
     // copy assignment
     Ap& operator=(const Ap& rhs) {
         if (this != &rhs) { // 檢查自我賦值
             mApPos = rhs.mApPos;
             mBssid = rhs.mBssid;
-            mNumOfObserved = rhs.mNumOfObserved;
+            mObservations = rhs.mObservations;
         }
         return *this;
     }
@@ -57,7 +60,7 @@ public:
         if (this != &rhs) { // 檢查自我賦值
             mApPos = std::move(rhs.mApPos);
             mBssid = rhs.mBssid;
-            mNumOfObserved = rhs.mNumOfObserved;
+            mObservations = rhs.mObservations;
         }
 
         return *this;
@@ -65,24 +68,27 @@ public:
 
 
     ~Ap(){}
+
+    int nObs;
+
     void SetApPos(const Eigen::Vector3f &Pos);
     Eigen::Vector3f GetApPos();
 
     void SetBssid(const std::string &Bssid);
     std::string GetBssid();
     static std::mutex mApGlobalMutex;
-    int GetNumOfObserved();
-    void AddNumOfObserved();
-    void ResetNumOfObserved();
+    int Observations();
+    void AddObservation(KeyFrame* pKF);
+    void EraseObservation(KeyFrame* pKF);
 protected:
     // Position in absolute coordinates
     Eigen::Vector3f mApPos;
     std::string mBssid;
-    int mNumOfObserved;
+    std::set<KeyFrame*> mObservations;
     
     // Mutex
     std::mutex mMutexApPos;
-    std::mutex mMutexFeatures;
+    std::mutex mMutexApFeatures;
     
 
 // private:

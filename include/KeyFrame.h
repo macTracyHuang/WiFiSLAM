@@ -31,7 +31,7 @@
 
 #include "GeometricCamera.h"
 #include "SerializationUtils.h"
-
+#include "Fingerprint.h"
 #include <mutex>
 
 #include <boost/serialization/base_object.hpp>
@@ -46,7 +46,6 @@ class Map;
 class MapPoint;
 class Frame;
 class KeyFrameDatabase;
-
 class GeometricCamera;
 
 class KeyFrame

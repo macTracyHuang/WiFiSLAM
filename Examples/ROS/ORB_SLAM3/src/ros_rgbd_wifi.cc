@@ -211,7 +211,7 @@ void ImageGrabber::GrabRGBD_Wifi(const sensor_msgs::ImageConstPtr& msgRGB,const 
     if (msgWifi)
         mpSLAM->TrackRGBD_Wifi(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec(),mpWifiGb->msgToFp(msgWifi));
     else
-        mpSLAM->TrackRGBD_Wifi(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec());
+        mpSLAM->TrackRGBD(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec());
     
 }
 

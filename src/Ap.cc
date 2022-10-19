@@ -8,9 +8,6 @@ namespace ORB_SLAM3
 
 std::mutex Ap::mApGlobalMutex;
 
-/** 
- * @brief 构造函数
- */
 
 
 void Ap::SetApPos(const Eigen::Vector3f &Pos)
@@ -37,21 +34,30 @@ std::string Ap::GetBssid()
     return mBssid;
 }
 
-int Ap::GetNumOfObserved()
+
+/**
+ * @brief return number of observations
+ * @return nObs
+ */
+int Ap::Observations()
 {
-    std::unique_lock<std::mutex> lock(mMutexFeatures);
-    return mNumOfObserved;
+    std::unique_lock<std::mutex> lock(mMutexApFeatures);
+    return nObs;
 }
 
-void Ap::AddNumOfObserved()
+
+
+void Ap::AddObservation(KeyFrame* pKF)
 {
-    std::unique_lock<std::mutex> lock(mMutexFeatures);
-    mNumOfObserved++;
+    std::unique_lock<std::mutex> lock(mMutexApFeatures);
+    mObservations.insert(pKF);
+    nObs++;
 }
 
-void Ap::ResetNumOfObserved()
+void Ap::EraseObservation(KeyFrame* pKF)
 {
-    std::unique_lock<std::mutex> lock(mMutexFeatures);
-    mNumOfObserved = 0;
+    std::unique_lock<std::mutex> lock(mMutexApFeatures);
+    mObservations.erase(pKF);
+    nObs--;
 }
 } //namespace ORB_SLAM

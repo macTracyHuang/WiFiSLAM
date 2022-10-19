@@ -2035,7 +2035,11 @@ void Tracking::Track()
 {
     bool bHasWifi = mCurrentFrame.HasWifi();
     if (bHasWifi)
+    {
         Verbose::PrintMess("Track With WiFi", Verbose::VERBOSITY_DEBUG);
+        cout << "test lock" <<endl;
+        cout << mCurrentFrame.mFingerprint.mvAp[0]->Observations() <<endl;
+    }
     else
         Verbose::PrintMess("Track Without WiFi", Verbose::VERBOSITY_DEBUG);
     if (bStepByStep)
@@ -2735,11 +2739,6 @@ void Tracking::Track()
         }
 
     }
-
-    // tm update wifi ap pose
-    if (mState == OK)
-        Optimizer::ApOptimization(&mCurrentFrame);
-    // end tm
 
 #ifdef REGISTER_LOOP
     if (Stop()) {
@@ -4096,6 +4095,18 @@ void Tracking::CreateNewKeyFrame()
     // 当前帧成为新的关键帧，更新
     mnLastKeyFrameId = mCurrentFrame.mnId;
     mpLastKeyFrame = pKF;
+
+    // // tm add for wifi add new ap obervation
+    // if (mCurrentFrame.HasWifi())
+    // {
+    //     cout << "mvap: " << mCurrentFrame.mFingerprint.mvAp.size() <<endl;
+    //     for (auto &ap:mCurrentFrame.mFingerprint.mvAp)
+    //     {
+    //         cout << ap->Observations() <<endl;
+    //         // ap->AddObservation(pKF);
+    //         // cout <<"new obs " << ap->GetBssid() << ":" << ap->Observations() << endl;
+    //     }
+    // } 
 }
 
 /**

@@ -1117,12 +1117,23 @@ int Optimizer::PoseOptimization(Frame *pFrame)
 /**
  * @brief tm estimate wifi ap pose
  * 
- * @param pFrame 
+ * @param pKF
  * @return int 
  */
-int Optimizer::ApOptimization(Frame *pFrame)
+int Optimizer::ApOptimization(KeyFrame *pKF)
 {
-    Fingerprint fp  = pFrame->mFingerprint;
+    // tm Local Aps seen in Local KeyFrames add for wifi
+    // only add ap for optimization when ap->AddNumOfObserved() > threshold, erase AddNumOfObserved() each time?
+    int threshold = 5;
+    unordered_set<Ap*> sLocalAps;
+    for(auto ap:pKF->mFingerprint.mvAp)
+    {
+        if(ap->Observations() >= threshold)
+            sLocalAps.insert(ap);
+    }
+    
+    cout << "Number Of Ap to Optimize:" << sLocalAps.size() << endl;
+
 }
 
 void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap, int& num_fixedKF, int& num_OptKF, int& num_MPs, int& num_edges)
@@ -1171,21 +1182,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
         }
     }
 
-    // tm Local Aps seen in Local KeyFrames
-    list<Ap*> lLocalAps;
-    for(list<KeyFrame*>::iterator lit=lLocalKeyFrames.begin() , lend=lLocalKeyFrames.end(); lit!=lend; lit++)
-    {
-        KeyFrame* pKFi = *lit;
-        Fingerprint fingerprint = pKFi->mFingerprint;
-        for(auto &ap:fingerprint.mvAp)
-        {
-            lLocalAps.push_back(ap);
-        }
-    }
 
-    cout << "Local Map Ap Num:" << lLocalAps.size() << endl;
-    cout << "Local Map Ap Unique:" << set<Ap*>(lLocalAps.begin(), lLocalAps.end()).size() << endl;
-    // end tm
 
     // Fixed Keyframes. Keyframes that see Local MapPoints but that are not Local Keyframes
     list<KeyFrame*> lFixedCameras;
@@ -1523,6 +1520,10 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     }
 
     pMap->IncreaseChangeIndex();
+
+
+    // tm add for wifi
+    // ApOptimization(pKF);
 }
 
 
