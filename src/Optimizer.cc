@@ -1123,20 +1123,116 @@ int Optimizer::PoseOptimization(Frame *pFrame)
 int Optimizer::ApOptimization(KeyFrame *pKF)
 {
     // tm Local Aps seen in Local KeyFrames add for wifi
+
+    // Get Ap list
     // only add ap for optimization when ap->AddNumOfObserved() > threshold, erase AddNumOfObserved() each time?
     Verbose::PrintMess("ApOptimization", Verbose::VERBOSITY_DEBUG);
     int threshold = 5;
     set<boost::shared_ptr< ::ORB_SLAM3::Ap>> sLocalAps;
+    set<KeyFrame*> sFixedCameras;
+
     if (!pKF->bHasWifi)
         return 0;
-    for(auto ap:pKF->mpFingerprint->mvAp)
+    for(auto &ap:pKF->mpFingerprint->mvAp)
     {
         if(ap->Observations() >= threshold)
+        {
             sLocalAps.insert(ap);
+
+            // Get Cam list
+            if  (sLocalAps.count(ap))
+                continue;
+
+            std::set<KeyFrame*> observations = ap->GetObservations();
+            for (auto &kf:observations)
+            {
+                sFixedCameras.insert(kf);
+            }
+        }
+    }
+
+    cout << "Number Of Ap to Optimize:" << sLocalAps.size() << endl;
+    cout << "Number Of Fix Cam to Optimize:" << sFixedCameras.size() << endl;
+
+    // Setup optimizer
+    g2o::SparseOptimizer optimizer;
+    g2o::BlockSolver_6_3::LinearSolverType* linearSolver;
+
+    linearSolver = new g2o::LinearSolverEigen<g2o::BlockSolver_6_3::PoseMatrixType>();
+
+    g2o::BlockSolver_6_3 * solver_ptr = new g2o::BlockSolver_6_3(linearSolver);
+
+    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(solver_ptr);
+
+    optimizer.setAlgorithm(solver);
+    optimizer.setVerbose(false);
+
+    unsigned long maxApid = 0;
+    // Set Ap vertices
+    for(auto &ap:sLocalAps)
+    {
+        g2o::VertexSBAPointXYZ* vAp = new g2o::VertexSBAPointXYZ;
+        vAp->setEstimate(ap->GetApPos().cast<double>());
+        vAp->setId(ap->mnId);
+        vAp->setMarginalized(true);
+        optimizer.addVertex(vAp);
+        if (ap->mnId > maxApid)
+            maxApid = ap->mnId;
+    }
+    // Set cam vertices and edges
+    const int nExpectedSize = sFixedCameras.size()*sLocalAps.size();
+
+    vector<ORB_SLAM3::ApEdge*> vpApEdges;
+    vpApEdges.reserve(nExpectedSize);
+
+    const float thHuberMono = sqrt(5.991);
+
+    for (auto &pKFi:sFixedCameras)
+    {
+        if (pKFi->isBad()) continue;
+
+        g2o::VertexSE3Expmap* vSE3 = new g2o::VertexSE3Expmap();
+        Sophus::SE3<float> Tcw = pKFi->GetPose();
+        vSE3->setEstimate(g2o::SE3Quat(Tcw.unit_quaternion().cast<double>(),Tcw.translation().cast<double>()));
+        vSE3->setId(pKFi->mnId + maxApid);
+        vSE3->setFixed(true);
+        optimizer.addVertex(vSE3);
+
+        auto vAp = pKFi->mpFingerprint->mvAp;
+        auto vRssi = pKFi->mpFingerprint->mvRssi;
+        //Set edges
+        for (int i = 0; i < int(vAp.size()); i++)
+        {
+            auto ap = vAp[i];    
+            ORB_SLAM3::ApEdge* e = new ORB_SLAM3::ApEdge(Vector1d());
+
+            e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(ap->mnId)));
+            e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKFi->mnId + ap->mnId)));
+
+            e->setMeasurement(Vector1d(vRssi[i]));
+            e->setInformation(Vector1d(1));
+
+            g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
+            e->setRobustKernel(rk);
+            rk->setDelta(thHuberMono);
+
+            optimizer.addEdge(e);
+            vpApEdges.push_back(e);
+        }
     }
     
-    cout << "Number Of Ap to Optimize:" << sLocalAps.size() << endl;
+    optimizer.initializeOptimization();
+    optimizer.optimize(10);
 
+
+    // Recover optimized data
+    for(auto &ap:sLocalAps)
+    {
+        g2o::VertexSBAPointXYZ* vAp = static_cast<g2o::VertexSBAPointXYZ*>(optimizer.vertex(ap->mnId));
+        ap->SetApPos(vAp->estimate().cast<float>());
+    }
+
+    cout << "end ap optimized" <<endl;
 }
 
 void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap, int& num_fixedKF, int& num_OptKF, int& num_MPs, int& num_edges)

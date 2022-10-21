@@ -80,7 +80,9 @@ public:
     int Observations();
     void AddObservation(KeyFrame* pKF);
     void EraseObservation(KeyFrame* pKF);
+    std::set<KeyFrame*> GetObservations();
     int nObs;
+    long unsigned int mnId;
 protected:
     // Position in absolute coordinates
     Eigen::Vector3f mApPos;

@@ -60,4 +60,10 @@ void Ap::EraseObservation(KeyFrame* pKF)
     mObservations.erase(pKF);
     nObs--;
 }
-} //namespace ORB_SLAM
+
+set<KeyFrame*>  Ap::GetObservations()
+{
+    unique_lock<mutex> lock(mMutexFeatures);
+    return mObservations;
+}
+} //namespace ORB_SL

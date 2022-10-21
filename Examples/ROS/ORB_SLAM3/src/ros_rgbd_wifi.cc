@@ -249,6 +249,7 @@ ORB_SLAM3::Fingerprint::FingerprintPtr WiFiGrabber::msgToFp(const wifi_scan::Fin
             boost::shared_ptr< ::ORB_SLAM3::Ap> mpNewAp(new ORB_SLAM3::Ap(bssid));
             mpSLAM->AddNewAp(mpNewAp);
             mpNewAp->nObs = 1;
+            mpNewAp->mnId = mpSLAM->GetAllAps().size() + 1;
             fingerprint->mvAp.push_back(mpNewAp);
             fingerprint->mvRssi.push_back(rssi);
         }

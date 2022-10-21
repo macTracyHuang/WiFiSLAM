@@ -44,6 +44,7 @@ class KeyFrame;
 class Frame;
 class GeometricCamera;
 
+typedef Eigen::Matrix<double, 1, 1> Vector1d;
 typedef Eigen::Matrix<double, 6, 1> Vector6d;
 typedef Eigen::Matrix<double, 9, 1> Vector9d;
 typedef Eigen::Matrix<double, 12, 1> Vector12d;
@@ -1000,12 +1001,12 @@ public:
 //     virtual bool write(std::ostream& os) const {}
 // };
 
-class ApEdge: public g2o::BaseBinaryEdge<1, double, g2o::VertexSBAPointXYZ, g2o::VertexSE3Expmap>
+class ApEdge: public g2o::BaseBinaryEdge<1, Vector1d, g2o::VertexSBAPointXYZ, g2o::VertexSE3Expmap>
 {
     public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    double _x;      
-    ApEdge(double x): BaseBinaryEdge(), _x(x) {};     
+    Vector1d _x;      
+    ApEdge(Vector1d x): BaseBinaryEdge(), _x(x) {};     
    
     virtual void computeError() override
     {
@@ -1019,12 +1020,12 @@ class ApEdge: public g2o::BaseBinaryEdge<1, double, g2o::VertexSBAPointXYZ, g2o:
         // RSSI Prediction Based on P(r) = P(r0) - 10 * alpha * log(r/r0)
         // P(r) = C - 10 * alpha * log(r)
         // C = P(r0) - log(r0) , r = 10^((C-P(r) / (10 * alpha))
-        // Assume r0 = 1 P(1) = 20
-        int C = 20, alpha = 5;
+        // Assume r0 = 1 P(1) = -20
+        int C = -20, alpha = 5;
         double r = sqrt(pow((apPos[0] - camPos[0]),2) + pow((apPos[1] - camPos[1]),2) + pow((apPos[2] - camPos[2]),2));
         double prediction = C - 10 * alpha * log(r);
 
-        double obs(_measurement);
+        double obs(_measurement(0));
         _error(0,0) =  obs - prediction;
     }      
     // virtual void linearizeOplus() override
