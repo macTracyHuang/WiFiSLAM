@@ -35,15 +35,15 @@ class Ap
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    Ap():mApPos(Eigen::Vector3f()), mBssid(""),mObservations(std::set<KeyFrame*>()){}
-    Ap(const std::string &Bssid):mApPos(Eigen::Vector3f()),mBssid(Bssid),mObservations(std::set<KeyFrame*>()){}
-    Ap(const Eigen::Vector3f &Pos, const std::string &Bssid):mApPos(Pos),mBssid(Bssid),mObservations(std::set<KeyFrame*>()){}
+    Ap():mApPos(Eigen::Vector3f()), mBssid(""),mObservations(std::set<KeyFrame*>()),isInitial(false){}
+    Ap(const std::string &Bssid):mApPos(Eigen::Vector3f()),mBssid(Bssid),mObservations(std::set<KeyFrame*>()),isInitial(false){}
+    Ap(const Eigen::Vector3f &Pos, const std::string &Bssid):mApPos(Pos),mBssid(Bssid),mObservations(std::set<KeyFrame*>()),isInitial(false){}
 
     // Copy constructor.
-    Ap(const Ap &ap):mApPos(ap.mApPos), mBssid(ap.mBssid), mObservations(ap.mObservations){}
+    Ap(const Ap &ap):mApPos(ap.mApPos), mBssid(ap.mBssid), mObservations(ap.mObservations),isInitial(ap.isInitial){}
 
     // move constructor
-    Ap(Ap&& ap) : mApPos(std::move(ap.mApPos)), mBssid(ap.mBssid),mObservations(ap.mObservations){}
+    Ap(Ap&& ap) : mApPos(std::move(ap.mApPos)), mBssid(ap.mBssid),mObservations(ap.mObservations),isInitial(ap.isInitial){}
 
     // copy assignment
     Ap& operator=(const Ap& rhs) {
@@ -51,6 +51,7 @@ public:
             mApPos = rhs.mApPos;
             mBssid = rhs.mBssid;
             mObservations = rhs.mObservations;
+            isInitial = rhs.isInitial;
         }
         return *this;
     }
@@ -61,6 +62,7 @@ public:
             mApPos = std::move(rhs.mApPos);
             mBssid = rhs.mBssid;
             mObservations = rhs.mObservations;
+            isInitial = rhs.isInitial;
         }
 
         return *this;
@@ -81,6 +83,11 @@ public:
     void AddObservation(KeyFrame* pKF);
     void EraseObservation(KeyFrame* pKF);
     std::set<KeyFrame*> GetObservations();
+    bool isInitial;
+    void InitializePose();
+    float average(std::vector<float> const& v);
+
+
     int nObs;
     long unsigned int mnId;
 protected:
@@ -92,6 +99,7 @@ protected:
     // Mutex
     std::mutex mMutexApPos;
     std::mutex mMutexFeatures;
+    std::mutex mMutexObservations;
     
     
 

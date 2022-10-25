@@ -757,6 +757,8 @@ void System::SaveApInfo(const string &filename)
     for (auto &ap:mAllAps)
     {
         f << count << ". Address: " << ap->GetBssid() << endl << "Obs: " << ap->Observations() << endl;
+        f << "isInitial: " << ap->isInitial <<endl;
+        f << "Pos: " << endl << ap->GetApPos() << endl;
         f << "*************"<<endl;
         count++; 
     }

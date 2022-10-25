@@ -1702,6 +1702,10 @@ Sophus::SE3f Tracking::GrabImageRGBD_Wifi(const cv::Mat &imRGB,const cv::Mat &im
     // Step 4：跟踪
     Track();
 
+
+    // try pure wifi:
+    TrackWithWiFi();
+    
     // 返回当前帧的位姿
     return mCurrentFrame.GetPose();
 }
@@ -3567,7 +3571,9 @@ bool Tracking::TrackWithMotionModel()
  */
 bool Tracking::TrackWithWiFi()
 {
-    return true;
+    Verbose::PrintMess("TrackWithWiFi ", Verbose::VERBOSITY_DEBUG);
+    int nEdges = Optimizer::PosePureWifiOptimization(&mCurrentFrame);
+    return nEdges > 0;
 }
 
 /**
@@ -4101,6 +4107,7 @@ void Tracking::CreateNewKeyFrame()
     if (mCurrentFrame.HasWifi())
     {
         // cout << "mvap: " << mCurrentFrame.mpFingerprint->mvAp.size() <<endl;
+        assert(mCurrentFrame.mpFingerprint->mvAp.size() == mCurrentFrame.mpFingerprint->mvRssi.size());
         for (auto &ap:mCurrentFrame.mpFingerprint->mvAp)
         {
             ap->AddObservation(pKF);

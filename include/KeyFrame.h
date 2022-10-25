@@ -543,7 +543,6 @@ public:
         cout << "Point distribution in KeyFrame: left-> " << left << " --- right-> " << right << endl;
     }
 
-
 };
 
 } //namespace ORB_SLAM

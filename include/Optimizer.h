@@ -62,6 +62,7 @@ public:
 
     // tm add for wifi
     int static ApOptimization(KeyFrame *pKF);
+    int static PosePureWifiOptimization(Frame *pFrame);
     //end tm
 
     // if bFixScale is true, 6DoF optimization (stereo,rgbd), 7DoF otherwise (mono)

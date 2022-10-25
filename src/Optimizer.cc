@@ -810,7 +810,6 @@ void Optimizer::FullInertialBA(Map *pMap, int its, const bool bFixLocal, const l
     pMap->IncreaseChangeIndex();
 }
 
-
 int Optimizer::PoseOptimization(Frame *pFrame)
 {
     g2o::SparseOptimizer optimizer;
@@ -1113,6 +1112,130 @@ int Optimizer::PoseOptimization(Frame *pFrame)
     return nInitialCorrespondences-nBad;
 }
 
+/**
+ * @brief tm estimate cam pose by wifi aps
+ * 
+ * @param pFrame
+ * @return int 
+ */
+int Optimizer::PosePureWifiOptimization(Frame *pFrame)
+{
+    // Setup optimizer
+    g2o::SparseOptimizer optimizer;
+    g2o::BlockSolver_6_3::LinearSolverType * linearSolver;
+
+    linearSolver = new g2o::LinearSolverDense<g2o::BlockSolver_6_3::PoseMatrixType>();
+
+    g2o::BlockSolver_6_3 * solver_ptr = new g2o::BlockSolver_6_3(linearSolver);
+
+    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(solver_ptr);
+    optimizer.setAlgorithm(solver);
+
+    // calculate initial cam pose
+    auto vAps = pFrame->mpFingerprint->mvAp;
+    auto vRssis = pFrame->mpFingerprint->mvRssi;
+    vector<float> vx,vy,vz;
+    for (int i = 0; i < int(vAps.size()); i++)
+    {
+        Eigen::Vector3f apPose = vAps[i]->GetApPos();
+        vx.push_back(apPose[0]);
+        vy.push_back(apPose[1]);
+        vz.push_back(apPose[2]);
+    }
+    // set cam vertex with initial cam pose
+    g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
+    auto const count = static_cast<float>(vx.size());
+    float avgx = std::accumulate(vx.begin(), vx.end(), 0) / count;
+    float avgy = std::accumulate(vy.begin(), vy.end(), 0) / count;
+    float avgz = std::accumulate(vz.begin(), vz.end(), 0) / count;
+
+    Eigen::Vector3f t(avgx, avgy, avgz);
+    Eigen::Matrix<float, 3, 3> R;
+    Sophus::SE3<float> Twc(R,t);
+    vSE3->setEstimate(g2o::SE3Quat(Twc.unit_quaternion().cast<double>(),Twc.translation().cast<double>()));
+    vSE3->setId(0);
+    vSE3->setFixed(false);
+    optimizer.addVertex(vSE3);
+
+    // set fix ap vertex, edges
+    const int nExpectedSize = pFrame->mpFingerprint->mvAp.size();
+    vector<ORB_SLAM3::ApEdge*> vpApEdges;
+    vpApEdges.reserve(nExpectedSize);
+
+    vector<boost::shared_ptr<ORB_SLAM3::Ap>> vpApEdgeAps;
+    vpApEdgeAps.reserve(nExpectedSize);
+
+    //Set Aps
+    set<boost::shared_ptr< ::ORB_SLAM3::Ap>> sLocalAps;
+    int thershold = 5;
+    for (auto &ap:vAps)
+    {
+        // ap vertex
+        g2o::VertexSBAPointXYZ* vAp = new g2o::VertexSBAPointXYZ;
+
+        if (!ap->isInitial || ap->Observations() < thershold)
+            continue;
+
+        vAp->setEstimate(ap->GetApPos().cast<double>());    
+        vAp->setId(ap->mnId + 1); // + 1 coz cam vertex
+        vAp->setFixed(true);
+        optimizer.addVertex(vAp);
+        sLocalAps.insert(ap);
+    }
+
+    cout << "Number of Aps For Estimate CamPose: " << sLocalAps.size() << endl;
+
+    //Set edges
+    int nEdges = 0;
+
+    const float thHuberMono = sqrt(5.991);
+    // cout << "set edge" <<endl;
+    for (int i = 0; i < int(vAps.size()); i++)
+    {
+        auto ap = vAps[i];
+        if (!sLocalAps.count(ap)) continue;
+        ORB_SLAM3::ApEdge* e = new ORB_SLAM3::ApEdge(Vector1d());
+        int id = ap->mnId + 1;
+        e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id)));
+        if (!optimizer.vertex(id)) Verbose::PrintMess("null ap vertex", Verbose::VERBOSITY_DEBUG);
+        e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(0)));
+        if (!optimizer.vertex(0)) Verbose::PrintMess("null cam vertex", Verbose::VERBOSITY_DEBUG);
+        int a = vRssis[i];
+        auto mes = Vector1d(a);
+        e->setMeasurement(mes);
+        e->setInformation(Vector1d(1));
+        g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
+        e->setRobustKernel(rk);
+        rk->setDelta(thHuberMono);
+        optimizer.addEdge(e);
+        vpApEdges.push_back(e);
+        vpApEdgeAps.push_back(std::move(ap));
+        nEdges++;
+    }
+
+    // start optimize
+    if (nEdges)
+    {
+        optimizer.initializeOptimization();
+        optimizer.optimize(10);
+
+        // Recover optimized data
+        g2o::VertexSE3Expmap* vSE3_recov = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(0));
+        g2o::SE3Quat SE3quat_recov = vSE3_recov->estimate();
+        Sophus::SE3<float> pose(SE3quat_recov.rotation().cast<float>(),
+                SE3quat_recov.translation().cast<float>());
+        
+        // in graph pose is Twc
+        // pFrame->SetPose(pose.inverse());
+        auto p = pose.inverse().translation();
+        cout << "wifi pos: " << p << endl;
+        cout << "visual pos: " << pFrame->GetPose().translation();
+    }
+
+    Verbose::PrintMess("End PosePureWifiOptimization", Verbose::VERBOSITY_DEBUG);
+    
+    return nEdges;
+}
 
 /**
  * @brief tm estimate wifi ap pose
@@ -1135,13 +1258,14 @@ int Optimizer::ApOptimization(KeyFrame *pKF)
         return 0;
     for(auto &ap:pKF->mpFingerprint->mvAp)
     {
+        if (sLocalAps.count(ap))
+            continue;
+
         if(ap->Observations() >= threshold)
         {
             sLocalAps.insert(ap);
 
             // Get Cam list
-            if  (sLocalAps.count(ap))
-                continue;
 
             std::set<KeyFrame*> observations = ap->GetObservations();
             for (auto &kf:observations)
@@ -1169,70 +1293,91 @@ int Optimizer::ApOptimization(KeyFrame *pKF)
 
     unsigned long maxApid = 0;
     // Set Ap vertices
+    Verbose::PrintMess("Ap Opt Set Ap vertices", Verbose::VERBOSITY_DEBUG);
     for(auto &ap:sLocalAps)
     {
         g2o::VertexSBAPointXYZ* vAp = new g2o::VertexSBAPointXYZ;
-        vAp->setEstimate(ap->GetApPos().cast<double>());
+
+        if (!ap->isInitial)
+            ap->InitializePose();
+
+        vAp->setEstimate(ap->GetApPos().cast<double>());    
         vAp->setId(ap->mnId);
+        // cout << "add ap id: " << ap->mnId <<endl;
         vAp->setMarginalized(true);
         optimizer.addVertex(vAp);
         if (ap->mnId > maxApid)
             maxApid = ap->mnId;
     }
     // Set cam vertices and edges
+    Verbose::PrintMess("Ap Opt Set cam vertices and edges", Verbose::VERBOSITY_DEBUG);
     const int nExpectedSize = sFixedCameras.size()*sLocalAps.size();
 
     vector<ORB_SLAM3::ApEdge*> vpApEdges;
     vpApEdges.reserve(nExpectedSize);
 
-    const float thHuberMono = sqrt(5.991);
+    vector<boost::shared_ptr<ORB_SLAM3::Ap>> vpApEdgeAps;
+    vpApEdgeAps.reserve(nExpectedSize);
 
+    const float thHuberMono = sqrt(5.991);
+    int nEdges = 0;
     for (auto &pKFi:sFixedCameras)
     {
         if (pKFi->isBad()) continue;
 
         g2o::VertexSE3Expmap* vSE3 = new g2o::VertexSE3Expmap();
-        Sophus::SE3<float> Tcw = pKFi->GetPose();
-        vSE3->setEstimate(g2o::SE3Quat(Tcw.unit_quaternion().cast<double>(),Tcw.translation().cast<double>()));
-        vSE3->setId(pKFi->mnId + maxApid);
+        Sophus::SE3<float> Twc = pKFi->GetPoseInverse();
+        vSE3->setEstimate(g2o::SE3Quat(Twc.unit_quaternion().cast<double>(),Twc.translation().cast<double>()));
+        vSE3->setId(pKFi->mnId + maxApid + 1);
         vSE3->setFixed(true);
         optimizer.addVertex(vSE3);
 
         auto vAp = pKFi->mpFingerprint->mvAp;
         auto vRssi = pKFi->mpFingerprint->mvRssi;
         //Set edges
+        // cout << "set edge" <<endl;
         for (int i = 0; i < int(vAp.size()); i++)
         {
-            auto ap = vAp[i];    
+            auto ap = vAp[i];
+            if (!sLocalAps.count(ap)) continue;
             ORB_SLAM3::ApEdge* e = new ORB_SLAM3::ApEdge(Vector1d());
 
             e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(ap->mnId)));
-            e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKFi->mnId + ap->mnId)));
-
-            e->setMeasurement(Vector1d(vRssi[i]));
+            if (!optimizer.vertex(ap->mnId)) Verbose::PrintMess("null ap vertex", Verbose::VERBOSITY_DEBUG);
+            e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKFi->mnId + maxApid + 1)));
+            if (!optimizer.vertex(pKFi->mnId + maxApid + 1)) Verbose::PrintMess("null cam vertex", Verbose::VERBOSITY_DEBUG);
+            int a = vRssi[i];
+            auto mes = Vector1d(a);
+            e->setMeasurement(mes);
             e->setInformation(Vector1d(1));
-
             g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
             e->setRobustKernel(rk);
             rk->setDelta(thHuberMono);
-
             optimizer.addEdge(e);
             vpApEdges.push_back(e);
+            vpApEdgeAps.push_back(std::move(ap));
+            nEdges++;
         }
     }
     
-    optimizer.initializeOptimization();
-    optimizer.optimize(10);
-
-
-    // Recover optimized data
-    for(auto &ap:sLocalAps)
+    if (nEdges)
     {
-        g2o::VertexSBAPointXYZ* vAp = static_cast<g2o::VertexSBAPointXYZ*>(optimizer.vertex(ap->mnId));
-        ap->SetApPos(vAp->estimate().cast<float>());
+        optimizer.initializeOptimization();
+        optimizer.optimize(10);
+
+        // Recover optimized data
+        for(auto &ap:vpApEdgeAps)
+        {
+            g2o::VertexSBAPointXYZ* vAp = static_cast<g2o::VertexSBAPointXYZ*>(optimizer.vertex(ap->mnId));
+            // if (!(ap->GetApPos() == vAp->estimate().cast<float>()))
+            //     cout << "Set " << ap->GetBssid() << endl << " from " << ap->GetApPos() << " to " << vAp->estimate().cast<float>()<<endl;
+            // else
+            //     cout << "Ap Pose does not change" <<endl;
+            ap->SetApPos(vAp->estimate().cast<float>());
+        }
     }
 
-    cout << "end ap optimized" <<endl;
+    Verbose::PrintMess("end ap optimized", Verbose::VERBOSITY_DEBUG);
 }
 
 void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap, int& num_fixedKF, int& num_OptKF, int& num_MPs, int& num_edges)

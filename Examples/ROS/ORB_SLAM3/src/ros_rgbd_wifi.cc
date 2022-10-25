@@ -239,17 +239,26 @@ ORB_SLAM3::Fingerprint::FingerprintPtr WiFiGrabber::msgToFp(const wifi_scan::Fin
 
     // ORB_SLAM3::Fingerprint* fingerprint = new ORB_SLAM3::Fingerprint();
     ORB_SLAM3::Fingerprint::FingerprintPtr fingerprint(new ORB_SLAM3::Fingerprint());
+
+    int rssi_th = -80;
     for (auto &addrssi: msgWifi->list)
     {
         string bssid = addrssi.address;
         int rssi = addrssi.rssi;
+        // only remain rssi threshold
+        if (rssi < rssi_th)
+            continue;
+            
         boost::shared_ptr< ::ORB_SLAM3::Ap> ap =  mpSLAM->GetApByBssid(bssid);
         if (!ap)
         {
             boost::shared_ptr< ::ORB_SLAM3::Ap> mpNewAp(new ORB_SLAM3::Ap(bssid));
             mpSLAM->AddNewAp(mpNewAp);
-            mpNewAp->nObs = 1;
+            mpNewAp->nObs = 0;
             mpNewAp->mnId = mpSLAM->GetAllAps().size() + 1;
+            Eigen::Vector3f pos(0,0,0);
+            mpNewAp->SetApPos(pos);
+
             fingerprint->mvAp.push_back(mpNewAp);
             fingerprint->mvRssi.push_back(rssi);
         }
@@ -260,6 +269,8 @@ ORB_SLAM3::Fingerprint::FingerprintPtr WiFiGrabber::msgToFp(const wifi_scan::Fin
         }
 
     }
+
+    assert(fingerprint->mvAp.size() == fingerprint->mvRssi.size());
 
     return fingerprint;
 }
