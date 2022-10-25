@@ -181,6 +181,7 @@ public:
     
     // tm add for wifi
     void SaveApInfo(const string &filename);
+    void SaveKeyFrameWiFiTrajectoryTUM(const string &filename);
 
     // TODO: Save/Load functions
     // SaveMap(const string &filename);

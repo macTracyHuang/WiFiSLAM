@@ -1145,14 +1145,14 @@ int Optimizer::PosePureWifiOptimization(Frame *pFrame)
     // set cam vertex with initial cam pose
     g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
     auto const count = static_cast<float>(vx.size());
-    float avgx = std::accumulate(vx.begin(), vx.end(), 0) / count;
-    float avgy = std::accumulate(vy.begin(), vy.end(), 0) / count;
-    float avgz = std::accumulate(vz.begin(), vz.end(), 0) / count;
+    double avgx = std::accumulate(vx.begin(), vx.end(), 0) / count;
+    double avgy = std::accumulate(vy.begin(), vy.end(), 0) / count;
+    double avgz = std::accumulate(vz.begin(), vz.end(), 0) / count;
 
-    Eigen::Vector3f t(avgx, avgy, avgz);
-    Eigen::Matrix<float, 3, 3> R;
-    Sophus::SE3<float> Twc(R,t);
-    vSE3->setEstimate(g2o::SE3Quat(Twc.unit_quaternion().cast<double>(),Twc.translation().cast<double>()));
+    g2o::Vector3D t;
+    t << avgx ,avgy, avgz;
+    g2o::Matrix3D R = g2o::Matrix3D::Identity();
+    vSE3->setEstimate(g2o::SE3Quat(R,t));
     vSE3->setId(0);
     vSE3->setFixed(false);
     optimizer.addVertex(vSE3);
@@ -1183,7 +1183,7 @@ int Optimizer::PosePureWifiOptimization(Frame *pFrame)
         sLocalAps.insert(ap);
     }
 
-    cout << "Number of Aps For Estimate CamPose: " << sLocalAps.size() << endl;
+    // cout << "Number of Aps For Estimate CamPose: " << sLocalAps.size() << endl;
 
     //Set edges
     int nEdges = 0;
@@ -1227,9 +1227,10 @@ int Optimizer::PosePureWifiOptimization(Frame *pFrame)
         
         // in graph pose is Twc
         // pFrame->SetPose(pose.inverse());
-        auto p = pose.inverse().translation();
-        cout << "wifi pos: " << p << endl;
-        cout << "visual pos: " << pFrame->GetPose().translation();
+        pFrame->SetPoseWiFi(pose.inverse());
+        // auto p = pose.inverse().translation();
+        // cout << "wifi pos: " << p << endl;
+        // cout << "visual pos: " << pFrame->GetPose().translation();
     }
 
     Verbose::PrintMess("End PosePureWifiOptimization", Verbose::VERBOSITY_DEBUG);
@@ -1275,8 +1276,8 @@ int Optimizer::ApOptimization(KeyFrame *pKF)
         }
     }
 
-    cout << "Number Of Ap to Optimize:" << sLocalAps.size() << endl;
-    cout << "Number Of Fix Cam to Optimize:" << sFixedCameras.size() << endl;
+    // cout << "Number Of Ap to Optimize:" << sLocalAps.size() << endl;
+    // cout << "Number Of Fix Cam to Optimize:" << sFixedCameras.size() << endl;
 
     // Setup optimizer
     g2o::SparseOptimizer optimizer;
@@ -1340,6 +1341,15 @@ int Optimizer::ApOptimization(KeyFrame *pKF)
         {
             auto ap = vAp[i];
             if (!sLocalAps.count(ap)) continue;
+
+            // remove ap with dis to cam > 15m
+            // int dis_th = 20;
+            auto apPos = ap->GetApPos();
+            auto camPos = pKFi->GetPoseInverse().translation();
+            double r = sqrt(pow((apPos[0] - camPos[0]),2) + pow((apPos[1] - camPos[1]),2) + pow((apPos[2] - camPos[2]),2));
+            // if (r > dis_th)
+            //     continue;
+
             ORB_SLAM3::ApEdge* e = new ORB_SLAM3::ApEdge(Vector1d());
 
             e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(ap->mnId)));

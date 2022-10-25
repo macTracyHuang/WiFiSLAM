@@ -1700,11 +1700,15 @@ Sophus::SE3f Tracking::GrabImageRGBD_Wifi(const cv::Mat &imRGB,const cv::Mat &im
     vdORBExtract_ms.push_back(mCurrentFrame.mTimeORB_Ext);
 #endif
     // Step 4：跟踪
-    Track();
-
-
     // try pure wifi:
-    TrackWithWiFi();
+    bool WiFiOK = TrackWithWiFi();
+    if (WiFiOK)
+    {
+        auto p = mCurrentFrame.GetPoseWifi().translation();
+        // cout << "track with wifi: " << p <<endl;
+    }
+
+    Track();
     
     // 返回当前帧的位姿
     return mCurrentFrame.GetPose();
@@ -3573,6 +3577,7 @@ bool Tracking::TrackWithWiFi()
 {
     Verbose::PrintMess("TrackWithWiFi ", Verbose::VERBOSITY_DEBUG);
     int nEdges = Optimizer::PosePureWifiOptimization(&mCurrentFrame);
+    cout << "track wifi nEdges: " << nEdges << endl;
     return nEdges > 0;
 }
 
@@ -4113,6 +4118,8 @@ void Tracking::CreateNewKeyFrame()
             ap->AddObservation(pKF);
             // cout <<"new obs " << ap->GetBssid() << ":" << ap->Observations() << endl;
         }
+
+        pKF->SetPoseWiFi(mCurrentFrame.GetPoseWifi());
     } 
 }
 

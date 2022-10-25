@@ -105,7 +105,8 @@ int main(int argc, char **argv)
     SLAM.Shutdown();
 
     // Save camera trajectory
-    // SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
+    SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
+    SLAM.SaveKeyFrameWiFiTrajectoryTUM("KeyFrameWiFiTrajectory.txt");
     SLAM.SaveApInfo("APINFO.txt");
     // SLAM.SavePointcloudMap();
 
@@ -240,7 +241,7 @@ ORB_SLAM3::Fingerprint::FingerprintPtr WiFiGrabber::msgToFp(const wifi_scan::Fin
     // ORB_SLAM3::Fingerprint* fingerprint = new ORB_SLAM3::Fingerprint();
     ORB_SLAM3::Fingerprint::FingerprintPtr fingerprint(new ORB_SLAM3::Fingerprint());
 
-    int rssi_th = -80;
+    int rssi_th = -60;
     for (auto &addrssi: msgWifi->list)
     {
         string bssid = addrssi.address;

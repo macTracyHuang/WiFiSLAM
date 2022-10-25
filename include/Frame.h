@@ -86,6 +86,9 @@ public:
     // Set the camera pose. (Imu pose is not modified!)
     void SetPose(const Sophus::SE3<float> &Tcw);
 
+    // pos loc by wifi
+    void SetPoseWiFi(const Sophus::SE3f &Tcw);
+
     // Set IMU velocity
     void SetVelocity(Eigen::Vector3f Vw);
 
@@ -153,6 +156,12 @@ public:
         return mTcw;
     }
 
+
+    inline Sophus::SE3<float> GetPoseWifi() const {
+        //TODO: can the Frame pose be accsessed from several threads? should this be protected somehow?
+        return mTcw_wifi;
+    }
+
     inline Eigen::Matrix3f GetRwc() const {
         return mRwc;
     }
@@ -184,6 +193,8 @@ private:
     Eigen::Matrix<float,3,1> mtcw;
     bool mbHasPose;
 
+    // pose loc by wifi
+    Sophus::SE3<float> mTcw_wifi;
     //Rcw_ not necessary as Sophus has a method for extracting the rotation matrix: Tcw_.rotationMatrix()
     //tcw_ not necessary as Sophus has a method for extracting the translation vector: Tcw_.translation()
     //Twc_ not necessary as Sophus has a method for easily computing the inverse pose: Tcw_.inverse()

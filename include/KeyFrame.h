@@ -200,7 +200,11 @@ public:
     void SetPose(const Sophus::SE3f &Tcw);
     void SetVelocity(const Eigen::Vector3f &Vw_);
 
+    // pos loc by wifi
+    void SetPoseWiFi(const Sophus::SE3f &Tcw);
+
     Sophus::SE3f GetPose();
+    Sophus::SE3f GetPoseWifi();
 
     Sophus::SE3f GetPoseInverse();
     Eigen::Vector3f GetCameraCenter();
@@ -439,6 +443,9 @@ protected:
     Sophus::SE3<float> mTwc;
     Eigen::Matrix3f mRwc;
 
+    // pose loc by wifi
+    Sophus::SE3<float> mTcw_wifi;
+
     // IMU position
     Eigen::Vector3f mOwb;
     // Velocity (Only used for inertial SLAM)
@@ -507,6 +514,7 @@ protected:
     std::mutex mMutexConnections;
     std::mutex mMutexFeatures;
     std::mutex mMutexMap;
+    std::mutex mMutexPoseWifi;
 
 public:
     GeometricCamera* mpCamera, *mpCamera2;

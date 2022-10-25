@@ -158,7 +158,7 @@ void Ap::InitializePose()
 
     Eigen::Vector3f initPose(x,y,z);
     mApPos = initPose;
-    cout << "Initialized " <<  mBssid << " as: " << endl << initPose << endl;
+    // cout << "Initialized " <<  mBssid << " as: " << endl << initPose << endl;
     isInitial = true;
 }
 

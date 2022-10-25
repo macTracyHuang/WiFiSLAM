@@ -652,6 +652,11 @@ void Frame::SetPose(const Sophus::SE3<float> &Tcw)
     mbHasPose = true;
 }
 
+void Frame::SetPoseWiFi(const Sophus::SE3f &Tcw)
+{
+    mTcw_wifi = Tcw;
+}
+
 /** 
  * @brief 赋值新的偏置
  * @param b 偏置

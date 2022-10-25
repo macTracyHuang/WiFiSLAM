@@ -1021,9 +1021,10 @@ class ApEdge: public g2o::BaseBinaryEdge<1, Vector1d, g2o::VertexSBAPointXYZ, g2
         // P(r) = C - 10 * alpha * log(r)
         // C = P(r0) - log(r0) , r = 10^((C-P(r) / (10 * alpha))
         // Assume r0 = 1 P(1) = -20
-        int C = -20, alpha = 5;
+        int C = -40, alpha = 10;
         double r = sqrt(pow((apPos[0] - camPos[0]),2) + pow((apPos[1] - camPos[1]),2) + pow((apPos[2] - camPos[2]),2));
-        double prediction = C - 10 * alpha * log(r);
+        
+        double prediction = C - (10 * alpha * log(r));
 
         double obs(_measurement(0));
         _error(0,0) =  obs - prediction;
