@@ -64,6 +64,7 @@ Thirdparty/DBoW2/lib/
 Thirdparty/g2o/build/
 Thirdparty/g2o/config.h
 Thirdparty/g2o/lib/
+Thirdparty/wifi_scan/build/
 Vocabulary/ORBvoc.txt
 build/
 
@@ -79,3 +80,5 @@ cmake-build-debug/
 
 *.bag
 postprocess/
+
+evaluation/*.txt
