@@ -1,0 +1,6 @@
+rssi_th = -60
+int C = -20, alpha = 3;
+
+ApOptimization thres = 5
+
+PosePureWifiOptimization thershold = 5

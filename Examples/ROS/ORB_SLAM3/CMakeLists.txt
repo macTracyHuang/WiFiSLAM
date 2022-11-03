@@ -62,6 +62,8 @@ ${PROJECT_SOURCE_DIR}/../../../lib/libORB_SLAM3.so
 -lboost_system
 )
 
+
+add_message_files(DIRECTORY ${PROJECT_SOURCE_DIR}/../../../Thirdparty/wifi_scan/msg FILES AddressRSSI.msg Fingerprint.msg)
 # # Node for monocular camera
 # rosbuild_add_executable(Mono
 # src/ros_mono.cc
@@ -133,7 +135,8 @@ ${LIBS}
 rosbuild_add_executable(RGBD_WiFi
 src/ros_rgbd_wifi.cc
 )
-
 target_link_libraries(RGBD_WiFi
 ${LIBS}
 )
+add_dependencies(RGBD_WiFi wifi_scan_gencpp)
+

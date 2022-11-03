@@ -706,15 +706,15 @@ void System::Shutdown()
     // 源代码这里注释掉了，但是不执行会有锁报错
     while(!mpLocalMapper->isFinished() || !mpLoopCloser->isFinished() || mpLoopCloser->isRunningGBA())
     {
-        // if(!mpLocalMapper->isFinished())
-        //     cout << "mpLocalMapper is not finished" << endl;
-        // if(!mpLoopCloser->isFinished())
-        //     cout << "mpLoopCloser is not finished" << endl;
-        // if(mpLoopCloser->isRunningGBA()){
-        //     cout << "mpLoopCloser is running GBA" << endl;
-        //     cout << "break anyway..." << endl;
-        //     break;
-        // }
+        if(!mpLocalMapper->isFinished())
+            cout << "mpLocalMapper is not finished" << endl;
+        if(!mpLoopCloser->isFinished())
+            cout << "mpLoopCloser is not finished" << endl;
+        if(mpLoopCloser->isRunningGBA()){
+            cout << "mpLoopCloser is running GBA" << endl;
+            cout << "break anyway..." << endl;
+            break;
+        }
         usleep(5000);
     }
 
@@ -761,6 +761,22 @@ void System::SaveApInfo(const string &filename)
         f << "Pos: " << endl << ap->GetApPos() << endl;
         f << "*************"<<endl;
         count++; 
+    }
+    f.close();
+}
+
+void System::SaveApPlot(const string &filename)
+{
+    cout << endl << "Saving Ap plot to " << filename << " ..." << endl;
+    ofstream f;
+    f.open(filename.c_str());
+    f << fixed;
+    f << "bssid," << "obs," << "x," << "y," << "z," << "qx," << "qy," << "qz," << "qw," << endl;
+    for (auto &ap:mAllAps)
+    {
+        auto pos = ap->GetApPos();
+        f << ap->GetBssid() << "," <<  ap->Observations() << "," << pos[0] << "," << pos[1] << "," << pos[2];
+        f << "," << 0 << "," << 0 << "," << 0 << "," << 1 << endl;
     }
     f.close();
 }
@@ -853,6 +869,10 @@ void System::SaveKeyFrameWiFiTrajectoryTUM(const string &filename)
         Sophus::SE3f Twc = pKF->GetPoseWifi().inverse();
         Eigen::Quaternionf q = Twc.unit_quaternion();
         Eigen::Vector3f t = Twc.translation();
+
+        if (t(0) == 0 && t(1) == 0 && t(2) == 0 && q.x() == 0 && q.y() == 0 && q.z() == 0 && q.w() == 1)
+            continue;
+            
         f << setprecision(6) << pKF->mTimeStamp << setprecision(7) << " " << t(0) << " " << t(1) << " " << t(2)
           << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
 

@@ -31,8 +31,9 @@
 
 #include<opencv2/core/core.hpp>
 
+#include <wifi_scan/Fingerprint.h>
 #include"../../../include/System.h"
-#include"../../../../Thirdparty/wifi_scan/msg_gen/cpp/include/wifi_scan/Fingerprint.h"
+// #include"../../../../Thirdparty/wifi_scan/msg_gen/cpp/include/wifi_scan/Fingerprint.h"
 
 using namespace std;
 
@@ -107,7 +108,8 @@ int main(int argc, char **argv)
     // Save camera trajectory
     SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
     SLAM.SaveKeyFrameWiFiTrajectoryTUM("KeyFrameWiFiTrajectory.txt");
-    SLAM.SaveApInfo("APINFO.txt");
+    SLAM.SaveApPlot("APPLOT.csv");
+    // SLAM.SaveApInfo("APINFO.txt");
     // SLAM.SavePointcloudMap();
 
     ros::shutdown();

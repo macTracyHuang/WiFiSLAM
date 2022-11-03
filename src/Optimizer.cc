@@ -1114,7 +1114,7 @@ int Optimizer::PoseOptimization(Frame *pFrame)
 
 /**
  * @brief tm estimate cam pose by wifi aps
- * 
+ *  To do: remove non-collinear ap positions ?
  * @param pFrame
  * @return int 
  */
@@ -1213,11 +1213,12 @@ int Optimizer::PosePureWifiOptimization(Frame *pFrame)
         nEdges++;
     }
 
+    const int edge_th = 3;
     // start optimize
-    if (nEdges)
+    if (nEdges > edge_th)
     {
         optimizer.initializeOptimization();
-        optimizer.optimize(10);
+        optimizer.optimize(20);
 
         // Recover optimized data
         g2o::VertexSE3Expmap* vSE3_recov = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(0));
@@ -1373,7 +1374,7 @@ int Optimizer::ApOptimization(KeyFrame *pKF)
     if (nEdges)
     {
         optimizer.initializeOptimization();
-        optimizer.optimize(10);
+        optimizer.optimize(20);
 
         // Recover optimized data
         for(auto &ap:vpApEdgeAps)
@@ -1776,6 +1777,8 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     pMap->IncreaseChangeIndex();
 
 
+    // const double startwifi_time = 1661769813 - 150;
+    // if (pKF->mTimeStamp > startwifi_time)
     // tm add for wifi
     ApOptimization(pKF);
 }

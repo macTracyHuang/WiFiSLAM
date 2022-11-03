@@ -1699,15 +1699,20 @@ Sophus::SE3f Tracking::GrabImageRGBD_Wifi(const cv::Mat &imRGB,const cv::Mat &im
 #ifdef REGISTER_TIMES
     vdORBExtract_ms.push_back(mCurrentFrame.mTimeORB_Ext);
 #endif
-    // Step 4：跟踪
-    // try pure wifi:
-    bool WiFiOK = TrackWithWiFi();
-    if (WiFiOK)
-    {
-        auto p = mCurrentFrame.GetPoseWifi().translation();
-        // cout << "track with wifi: " << p <<endl;
-    }
 
+    
+    // try pure wifi tracking:
+    // const double startwifi_time = 1661769813;
+
+    // if (mCurrentFrame.mTimeStamp > startwifi_time)
+    bool WiFiOK = TrackWithWiFi();
+    // if (WiFiOK)
+    // {
+    //     // auto p = mCurrentFrame.GetPoseWifi().translation();
+    //     cout << "track with wifi: " << p <<endl;
+    // }
+
+    // Step 4：跟踪
     Track();
     
     // 返回当前帧的位姿
@@ -3577,7 +3582,7 @@ bool Tracking::TrackWithWiFi()
 {
     Verbose::PrintMess("TrackWithWiFi ", Verbose::VERBOSITY_DEBUG);
     int nEdges = Optimizer::PosePureWifiOptimization(&mCurrentFrame);
-    cout << "track wifi nEdges: " << nEdges << endl;
+    // cout << "track wifi nEdges: " << nEdges << endl;
     return nEdges > 0;
 }
 

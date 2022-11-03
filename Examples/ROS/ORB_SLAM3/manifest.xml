@@ -9,7 +9,7 @@
   <depend package="sensor_msgs"/>
   <depend package="image_transport"/>
   <depend package="cv_bridge"/>
-  <!-- <depend package="wifi_scan"/> -->
+  <depend package="wifi_scan"/>
 </package>
 
 
