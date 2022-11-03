@@ -1799,6 +1799,98 @@ Sophus::SE3f Tracking::GrabImageMonocular(const cv::Mat &im, const double &times
     return mCurrentFrame.GetPose();
 }
 
+
+/**
+ * @brief tm add for wifi
+ * 
+ * @param im 
+ * @param fingerprint 
+ * @param timestamp 
+ * @param filename 
+ * @return Sophus::SE3f 
+ */
+Sophus::SE3f Tracking::GrabImageMonocular_Wifi(const cv::Mat &im, const Fingerprint::FingerprintPtr& fingerprint, const double &timestamp, string filename)
+{
+    mImGray = im;
+    // Step 1 ：将彩色图像转为灰度图像
+    // 若图片是3、4通道的彩色图，还需要转化成单通道灰度图
+    if(mImGray.channels()==3)
+    {
+        if(mbRGB)
+            cvtColor(mImGray,mImGray,cv::COLOR_RGB2GRAY);
+        else
+            cvtColor(mImGray,mImGray,cv::COLOR_BGR2GRAY);
+    }
+    else if(mImGray.channels()==4)
+    {
+        if(mbRGB)
+            cvtColor(mImGray,mImGray,cv::COLOR_RGBA2GRAY);
+        else
+            cvtColor(mImGray,mImGray,cv::COLOR_BGRA2GRAY);
+    }
+
+    // Step 2 ：construct frame with wifi
+    if (mSensor == System::MONOCULAR)
+    {
+        if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET ||(lastID - initID) < mMaxFrames)
+        {
+            if(mbOnlyTracking)
+            {
+                mCurrentFrame = Frame(mImGray,timestamp,fingerprint,mpORBextractorLeft,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth);
+                mState=LOC_INIT;
+                std::cout << "set cur frame"<<'\n';
+            }
+            else
+            {
+                mCurrentFrame = Frame(mImGray,timestamp,fingerprint,mpIniORBextractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth);
+            }
+        } 
+        else
+            mCurrentFrame = Frame(mImGray,timestamp,fingerprint,mpORBextractorLeft,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth);
+    }
+    else if(mSensor == System::IMU_MONOCULAR)
+    {
+        // 判断该帧是不是初始化
+        if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET)  //没有成功初始化的前一个状态就是NO_IMAGES_YET
+        {
+            mCurrentFrame = Frame(mImGray,timestamp,fingerprint,mpIniORBextractor,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
+        }
+        else
+            mCurrentFrame = Frame(mImGray,timestamp,fingerprint,mpORBextractorLeft,mpORBVocabulary,mpCamera,mDistCoef,mbf,mThDepth,&mLastFrame,*mpImuCalib);
+    }
+
+    // t0存储未初始化时的第1帧图像时间戳
+    if (mState==NO_IMAGES_YET)
+        t0=timestamp;
+
+    mCurrentFrame.mNameFile = filename;
+    mCurrentFrame.mnDataset = mnNumDataset;
+
+#ifdef REGISTER_TIMES
+    vdORBExtract_ms.push_back(mCurrentFrame.mTimeORB_Ext);
+#endif
+
+    lastID = mCurrentFrame.mnId;
+    
+    // Track with wifi
+    if (mCurrentFrame.HasWifi())
+    {
+
+        bool WiFiOK = TrackWithWiFi();
+        if (WiFiOK)
+        {
+            auto p = mCurrentFrame.GetPoseWifi().translation();
+            // cout << "track with wifi: " << p <<endl;
+        }
+    }
+
+    // Step 3 ：跟踪
+    Track();
+
+    // 返回当前帧的位姿
+    return mCurrentFrame.GetPose();
+}
+
 /**
  * @brief 将imu数据存放在mlQueueImuData的list链表里
  * @param[in] imuMeasurement 
@@ -2664,7 +2756,10 @@ void Tracking::Track()
             // 条件2：bOK=true跟踪成功 或 IMU模式下的RECENTLY_LOST模式且mInsertKFsLost为true
             if(bNeedKF && (bOK || (mInsertKFsLost && mState==RECENTLY_LOST &&
                                    (mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD))))
+            {
                 CreateNewKeyFrame();  // 创建关键帧，对于双目或RGB-D会产生新的地图点
+            }
+                
 
 #ifdef REGISTER_TIMES
             std::chrono::steady_clock::time_point time_EndNewKF = std::chrono::steady_clock::now();
@@ -3091,7 +3186,6 @@ void Tracking::CreateInitialMapMonocular()
     Verbose::PrintMess("New Map created with " + to_string(mpAtlas->MapPointsInMap()) + " points", Verbose::VERBOSITY_QUIET);
     if(!mbOnlyTracking)
         Optimizer::GlobalBundleAdjustemnt(mpAtlas->GetCurrentMap(),20);
-    cout << "end step 4"<<endl;
 
     // Step 5 取场景的中值深度，用于尺度归一化 
     // 为什么是 pKFini 而不是 pKCur ? 答：都可以的，内部做了位姿变换了
@@ -4092,6 +4186,8 @@ void Tracking::CreateNewKeyFrame()
 
     // Step 4：插入关键帧
     // 关键帧插入到列表 mlNewKeyFrames中，等待local mapping线程临幸
+
+    // For point cloud mapping
     if(mSensor==System::STEREO || mSensor==System::IMU_STEREO || mSensor==System::RGBD)
     {
         if (mpPointCloudMapping){
@@ -4104,6 +4200,8 @@ void Tracking::CreateNewKeyFrame()
         }
 
     }
+
+    // insert keyframe
     mpLocalMapper->InsertKeyFrame(pKF);
 
     // 插入好了，允许局部建图停止
@@ -4116,6 +4214,7 @@ void Tracking::CreateNewKeyFrame()
     // tm add for wifi add new ap obervation
     if (mCurrentFrame.HasWifi())
     {
+        
         // cout << "mvap: " << mCurrentFrame.mpFingerprint->mvAp.size() <<endl;
         assert(mCurrentFrame.mpFingerprint->mvAp.size() == mCurrentFrame.mpFingerprint->mvRssi.size());
         for (auto &ap:mCurrentFrame.mpFingerprint->mvAp)
@@ -4125,7 +4224,7 @@ void Tracking::CreateNewKeyFrame()
         }
 
         pKF->SetPoseWiFi(mCurrentFrame.GetPoseWifi());
-    } 
+    }
 }
 
 /**

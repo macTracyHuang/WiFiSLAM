@@ -63,36 +63,7 @@ ${PROJECT_SOURCE_DIR}/../../../lib/libORB_SLAM3.so
 )
 
 
-add_message_files(DIRECTORY ${PROJECT_SOURCE_DIR}/../../../Thirdparty/wifi_scan/msg FILES AddressRSSI.msg Fingerprint.msg)
-# # Node for monocular camera
-# rosbuild_add_executable(Mono
-# src/ros_mono.cc
-# )
-
-# target_link_libraries(Mono
-# ${LIBS}
-# )
-
-# Node for monocular camera (Augmented Reality Demo)
-# 由于里面代码没有将cv::mat 改成 SOPUS的暂时注释掉，不然会报错
-# rosbuild_add_executable(MonoAR
-# src/AR/ros_mono_ar.cc
-# src/AR/ViewerAR.h
-# src/AR/ViewerAR.cc
-# )
-
-# target_link_libraries(MonoAR
-# ${LIBS}
-# )
-
-# # Node for stereo camera
-# rosbuild_add_executable(Stereo
-# src/ros_stereo.cc
-# )
-
-# target_link_libraries(Stereo
-# ${LIBS}
-# )
+# add_message_files(DIRECTORY ${PROJECT_SOURCE_DIR}/../../../Thirdparty/wifi_scan/msg FILES AddressRSSI.msg Fingerprint.msg)
 
 # Node for RGB-D camera
 rosbuild_add_executable(RGBD
@@ -103,40 +74,22 @@ target_link_libraries(RGBD
 ${LIBS}
 )
 
-# # Node for monocular-inertial camera
-# rosbuild_add_executable(Mono_Inertial
-# src/ros_mono_inertial.cc
-# )
-
-# target_link_libraries(Mono_Inertial
-# ${LIBS}
-# )
-
-# # Node for stereo-inertial camera
-# rosbuild_add_executable(Stereo_Inertial
-# src/ros_stereo_inertial.cc
-# )
-
-# target_link_libraries(Stereo_Inertial
-# ${LIBS}
-# )
-
-# # Node for RGBD and inertial camera
-# rosbuild_add_executable(RGBD_inertial
-# src/ros_rgbd_inertial.cc
-# )
-
-# target_link_libraries(RGBD_inertial
-# ${LIBS}
-# )
-
-
-# Node for RGB-D wifi Wifi
+# Node for RGB-D with Wifi
 rosbuild_add_executable(RGBD_WiFi
 src/ros_rgbd_wifi.cc
 )
 target_link_libraries(RGBD_WiFi
 ${LIBS}
 )
-add_dependencies(RGBD_WiFi wifi_scan_gencpp)
+# add_dependencies(RGBD_WiFi wifi_scan_gencpp)
 
+
+
+# Node for Mono with Wifi
+rosbuild_add_executable(Mono_WiFi
+src/ros_mono_wifi.cc
+)
+target_link_libraries(Mono_WiFi
+${LIBS}
+)
+# add_dependencies(Mono_WiFi wifi_scan_gencpp)

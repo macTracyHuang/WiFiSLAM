@@ -21,19 +21,14 @@
 #include<algorithm>
 #include<fstream>
 #include<chrono>
-#include <cmath>
 
 #include<ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
-#include <message_filters/subscriber.h>
-#include <message_filters/time_synchronizer.h>
-#include <message_filters/sync_policies/approximate_time.h>
 
 #include<opencv2/core/core.hpp>
 
 #include <wifi_scan/Fingerprint.h>
 #include"../../../include/System.h"
-// #include"../../../../Thirdparty/wifi_scan/msg_gen/cpp/include/wifi_scan/Fingerprint.h"
 
 using namespace std;
 
@@ -56,49 +51,35 @@ class ImageGrabber
 public:
     ImageGrabber(ORB_SLAM3::System* pSLAM, WiFiGrabber *pWifiGb):mpSLAM(pSLAM) , mpWifiGb(pWifiGb){}
 
-    void GrabRGBD_Wifi(const sensor_msgs::ImageConstPtr& msgRGB,const sensor_msgs::ImageConstPtr& msgD);
+    void GrabImage(const sensor_msgs::ImageConstPtr& msg);
 
     ORB_SLAM3::System* mpSLAM;
-    WiFiGrabber* mpWifiGb; 
+    WiFiGrabber* mpWifiGb;
 };
-
-
-
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "RGBD");
+    ros::init(argc, argv, "Mono");
     ros::start();
 
     if(argc != 3)
     {
-        cerr << endl << "Usage: rosrun ORB_SLAM3 RGBD path_to_vocabulary path_to_settings" << endl;        
+        cerr << endl << "Usage: rosrun ORB_SLAM3 Mono path_to_vocabulary path_to_settings" << endl;        
         ros::shutdown();
         return 1;
     }    
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::RGBD,true);
+    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::MONOCULAR,true);
 
     WiFiGrabber wifigb(&SLAM);
     ImageGrabber igb(&SLAM, &wifigb);
 
-    ros::NodeHandle nh;
+    ros::NodeHandle nodeHandler;
+    // ros::Subscriber sub = nodeHandler.subscribe("/camera/image_raw", 1, &ImageGrabber::GrabImage,&igb);
+    ros::Subscriber sub = nodeHandler.subscribe("/camera/color/image_raw", 1, &ImageGrabber::GrabImage,&igb);
+    ros::Subscriber wifi_sub = nodeHandler.subscribe("/wifi_fp",100, &WiFiGrabber::GrabWifi, &wifigb);
 
-    // message_filters::Subscriber<sensor_msgs::Image> rgb_sub(nh, "/camera/rgb/image_raw", 100);
-    // message_filters::Subscriber<sensor_msgs::Image> depth_sub(nh, "/camera/depth_registered/image_raw", 100);
-    // 以下为tum rgbd 数据集的topic
-    message_filters::Subscriber<sensor_msgs::Image> rgb_sub(nh, "/camera/color/image_raw", 100);
-    message_filters::Subscriber<sensor_msgs::Image> depth_sub(nh, "/camera/aligned_depth_to_color/image_raw", 100);
-    ros::Subscriber wifi_sub = nh.subscribe("/wifi_fp",100, &WiFiGrabber::GrabWifi, &wifigb);
-    // message_filters::Subscriber<wifi_scan::Fingerprint> wifi_sub(nh, "/wifi_fp", 100);
-    // typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image, wifi_scan::Fingerprint> sync_pol;
-    // message_filters::Synchronizer<sync_pol> sync(sync_pol(10), rgb_sub,depth_sub, wifi_sub);
-    typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> sync_pol;
-    message_filters::Synchronizer<sync_pol> sync(sync_pol(10), rgb_sub,depth_sub);
-    // sync.registerCallback(boost::bind(&ImageGrabber::GrabRGBD_Wifi,&igb,_1,_2,_3));
-    sync.registerCallback(boost::bind(&ImageGrabber::GrabRGBD_Wifi,&igb,_1,_2));
-    
     ros::spin();
 
     // Stop all threads
@@ -107,22 +88,21 @@ int main(int argc, char **argv)
     // Save camera trajectory
     SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
     SLAM.SaveKeyFrameWiFiTrajectoryTUM("KeyFrameWiFiTrajectory.txt");
+    SLAM.SaveApInfo("APINFO.txt");
     SLAM.SaveApPlot("APPLOT.csv");
-    // SLAM.SaveApInfo("APINFO.txt");
-    // SLAM.SavePointcloudMap();
 
     ros::shutdown();
-
+    cout <<  "end the program"<<endl;
     return 0;
 }
 
-void ImageGrabber::GrabRGBD_Wifi(const sensor_msgs::ImageConstPtr& msgRGB,const sensor_msgs::ImageConstPtr& msgD)
+void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
 {
-        // Copy the ros image message to cv::Mat.
-    cv_bridge::CvImageConstPtr cv_ptrRGB;
+    // Copy the ros image message to cv::Mat.
+    cv_bridge::CvImageConstPtr cv_ptr;
     try
     {
-        cv_ptrRGB = cv_bridge::toCvShare(msgRGB);
+        cv_ptr = cv_bridge::toCvShare(msg);
     }
     catch (cv_bridge::Exception& e)
     {
@@ -130,29 +110,7 @@ void ImageGrabber::GrabRGBD_Wifi(const sensor_msgs::ImageConstPtr& msgRGB,const 
         return;
     }
 
-    cv_bridge::CvImageConstPtr cv_ptrD;
-    try
-    {
-        cv_ptrD = cv_bridge::toCvShare(msgD);
-    }
-    catch (cv_bridge::Exception& e)
-    {
-        ROS_ERROR("cv_bridge exception: %s", e.what());
-        return;
-    }
 
-    // tm demo block frame
-    
-    // const double block_time = 1661769533;
-    // if (mpSLAM->GetWifiMode() && floor(cv_ptrRGB->header.stamp.toSec()) >= block_time && floor(cv_ptrRGB->header.stamp.toSec()) < block_time + 4)
-    // {
-    //     cv::Mat blackImage = cv::Mat::zeros(cv::Size(640,480),CV_8UC1);
-    //     mpSLAM->TrackRGBD(blackImage,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec());
-    // }
-    // // tm
-    // else
-
-    // To do: decide when wifibuf should pop
     wifi_scan::FingerprintConstPtr msgWifi;
 
     mpWifiGb->mBufMutex.lock();
@@ -161,22 +119,19 @@ void ImageGrabber::GrabRGBD_Wifi(const sensor_msgs::ImageConstPtr& msgRGB,const 
     {
         ;
     }
-    else if (round(mpWifiGb->wifiBuf.back()->header.stamp.toSec() * 10.0) / 10.0 == round(cv_ptrRGB->header.stamp.toSec() * 10.0) / 10.0)
+    else if (round(mpWifiGb->wifiBuf.back()->header.stamp.toSec() * 10.0) / 10.0 == round(cv_ptr->header.stamp.toSec() * 10.0) / 10.0)
     {
-        // cout << setprecision(20) << mpWifiGb->wifiBuf.back()->header.stamp.toSec() << endl;
-        // cout << mpWifiGb->wifiBuf.back()->list.size() <<endl;
         msgWifi = mpWifiGb->wifiBuf.back();
     }
     mpWifiGb->mBufMutex.unlock();
 
-    // mpSLAM->TrackRGBD(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec());
-    // transfer ros msg to fingerprint.h ap.h
-
     if (msgWifi)
-        mpSLAM->TrackRGBD_Wifi(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec(),mpWifiGb->msgToFp(msgWifi));
+    {
+        mpSLAM->TrackMonocular_Wifi(cv_ptr->image,cv_ptr->header.stamp.toSec(),mpWifiGb->msgToFp(msgWifi));
+    }
     else
-        mpSLAM->TrackRGBD(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec());
-    
+        mpSLAM->TrackMonocular(cv_ptr->image,cv_ptr->header.stamp.toSec());
+   
 }
 
 void WiFiGrabber::GrabWifi(const wifi_scan::FingerprintConstPtr& msgWifi)
@@ -237,5 +192,3 @@ ORB_SLAM3::Fingerprint::FingerprintPtr WiFiGrabber::msgToFp(const wifi_scan::Fin
 
     return fingerprint;
 }
-
-

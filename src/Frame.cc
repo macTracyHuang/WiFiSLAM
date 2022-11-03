@@ -576,6 +576,127 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
     mpMutexImu = new std::mutex();
 }
 
+// Monocular with wifi
+Frame::Frame(const cv::Mat &imGray, const double &timeStamp, const Fingerprint::FingerprintPtr& fingerprint, ORBextractor* extractor,ORBVocabulary* voc, GeometricCamera* pCamera, cv::Mat &distCoef, const float &bf, const float &thDepth, Frame* pPrevF, const IMU::Calib &ImuCalib)
+    :mpcpi(NULL),mpORBvocabulary(voc),mpORBextractorLeft(extractor),mpORBextractorRight(static_cast<ORBextractor*>(NULL)),
+     mTimeStamp(timeStamp), mK(static_cast<Pinhole*>(pCamera)->toK()), mK_(static_cast<Pinhole*>(pCamera)->toK_()), mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth),
+     mImuCalib(ImuCalib), mpImuPreintegrated(NULL),mpPrevFrame(pPrevF),mpImuPreintegratedFrame(NULL), mpReferenceKF(static_cast<KeyFrame*>(NULL)), mbIsSet(false), mbImuPreintegrated(false), mpCamera(pCamera),
+     mpCamera2(nullptr), mbHasPose(false), mbHasVelocity(false), mpFingerprint(fingerprint)
+{
+    // Frame ID
+    // Step 1 帧的ID 自增
+    mnId=nNextId++;
+
+    // Step 2 计算图像金字塔的参数 
+    // Scale Level Info
+	//获取图像金字塔的层数
+    mnScaleLevels = mpORBextractorLeft->GetLevels();
+	//获取每层的缩放因子
+    mfScaleFactor = mpORBextractorLeft->GetScaleFactor();
+	//计算每层缩放因子的自然对数
+    mfLogScaleFactor = log(mfScaleFactor);
+	//获取各层图像的缩放因子
+    mvScaleFactors = mpORBextractorLeft->GetScaleFactors();
+	//获取各层图像的缩放因子的倒数
+    mvInvScaleFactors = mpORBextractorLeft->GetInverseScaleFactors();
+	//获取sigma^2
+    mvLevelSigma2 = mpORBextractorLeft->GetScaleSigmaSquares();
+	//获取sigma^2的倒数
+    mvInvLevelSigma2 = mpORBextractorLeft->GetInverseScaleSigmaSquares();
+
+    // ORB extraction
+#ifdef REGISTER_TIMES
+    std::chrono::steady_clock::time_point time_StartExtORB = std::chrono::steady_clock::now();
+#endif
+
+    // Step 3 对这个单目图像进行提取特征点, 第一个参数0-左图， 1-右图
+    ExtractORB(0,imGray,0,1000);
+
+#ifdef REGISTER_TIMES
+    std::chrono::steady_clock::time_point time_EndExtORB = std::chrono::steady_clock::now();
+
+    mTimeORB_Ext = std::chrono::duration_cast<std::chrono::duration<double,std::milli> >(time_EndExtORB - time_StartExtORB).count();
+#endif
+
+    // 提取特征点的个数
+    N = mvKeys.size();
+    // 如果没有能够成功提取出特征点，那么就直接返回了
+    if(mvKeys.empty())
+        return;
+
+    // Step 4 用OpenCV的矫正函数、内参对提取到的特征点进行矫正 
+    UndistortKeyPoints();
+
+    // Set no stereo information
+    // 由于单目相机无法直接获得立体信息，所以这里要给右图像对应点和深度赋值-1表示没有相关信息
+    mvuRight = vector<float>(N,-1);
+    mvDepth = vector<float>(N,-1);
+    mnCloseMPs = 0;
+
+    // 初始化本帧的地图点
+    mvpMapPoints = vector<MapPoint*>(N,static_cast<MapPoint*>(NULL));
+
+    mmProjectPoints.clear();// = map<long unsigned int, cv::Point2f>(N, static_cast<cv::Point2f>(NULL));
+    mmMatchedInImage.clear();
+
+    // 记录地图点是否为外点，初始化均为外点false
+    mvbOutlier = vector<bool>(N,false);
+
+    // This is done only for the first Frame (or after a change in the calibration)
+    //  Step 5 计算去畸变后图像边界，将特征点分配到网格中。这个过程一般是在第一帧或者是相机标定参数发生变化之后进行
+    if(mbInitialComputations)
+    {
+        // 计算去畸变后图像的边界
+        ComputeImageBounds(imGray);
+
+        // 表示一个图像像素相当于多少个图像网格列（宽）
+        mfGridElementWidthInv=static_cast<float>(FRAME_GRID_COLS)/static_cast<float>(mnMaxX-mnMinX);
+		// 表示一个图像像素相当于多少个图像网格行（高）
+        mfGridElementHeightInv=static_cast<float>(FRAME_GRID_ROWS)/static_cast<float>(mnMaxY-mnMinY);
+
+        fx = static_cast<Pinhole*>(mpCamera)->toK().at<float>(0,0);
+        fy = static_cast<Pinhole*>(mpCamera)->toK().at<float>(1,1);
+        cx = static_cast<Pinhole*>(mpCamera)->toK().at<float>(0,2);
+        cy = static_cast<Pinhole*>(mpCamera)->toK().at<float>(1,2);
+        // 猜测是因为这种除法计算需要的时间略长，所以这里直接存储了这个中间计算结果
+        invfx = 1.0f/fx;
+        invfy = 1.0f/fy;
+
+        // 特殊的初始化过程完成，标志复位
+        mbInitialComputations=false;
+    }
+
+    //计算 basline
+    mb = mbf/fx;
+
+    //Set no stereo fisheye information
+    Nleft = -1;
+    Nright = -1;
+    mvLeftToRightMatch = vector<int>(0);
+    mvRightToLeftMatch = vector<int>(0);
+    mvStereo3Dpoints = vector<Eigen::Vector3f>(0);
+    monoLeft = -1;
+    monoRight = -1;
+
+    // 将特征点分配到图像网格中 
+    AssignFeaturesToGrid();
+
+    if(pPrevF)
+    {
+        if(pPrevF->HasVelocity())
+        {
+            SetVelocity(pPrevF->GetVelocity());
+        }
+    }
+    else
+    {
+        mVw.setZero();
+    }
+
+    mpMutexImu = new std::mutex();
+}
+
+
 /** 
  * @brief 特征分网格
  */
