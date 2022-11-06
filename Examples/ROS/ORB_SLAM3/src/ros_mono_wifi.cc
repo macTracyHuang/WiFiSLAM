@@ -70,7 +70,9 @@ int main(int argc, char **argv)
     }    
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::MONOCULAR,true);
+    // ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::MONOCULAR,true);
+    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::MONOCULAR,false);
+
 
     WiFiGrabber wifigb(&SLAM);
     ImageGrabber igb(&SLAM, &wifigb);
@@ -127,7 +129,10 @@ void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
 
     if (msgWifi)
     {
+        // cout << "==============WIFI ====================="<<endl;
+        cout << msgWifi <<endl;
         mpSLAM->TrackMonocular_Wifi(cv_ptr->image,cv_ptr->header.stamp.toSec(),mpWifiGb->msgToFp(msgWifi));
+        // cout << "==============End WIFI ====================="<<endl;
     }
     else
         mpSLAM->TrackMonocular(cv_ptr->image,cv_ptr->header.stamp.toSec());
