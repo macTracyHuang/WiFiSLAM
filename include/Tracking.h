@@ -378,6 +378,7 @@ protected:
 
     void newParameterLoader(Settings* settings);
 
+
 #ifdef REGISTER_LOOP
     bool Stop();
 
@@ -389,6 +390,9 @@ protected:
 
 public:
     cv::Mat mImRight;
+
+    // tm add for wifi frame traj
+    std::vector<Frame*> mvpBackupFrames;
 };
 
 } //namespace ORB_SLAM

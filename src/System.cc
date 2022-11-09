@@ -298,8 +298,8 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
     // Fix verbosity
     // 打印输出中间的信息，设置为安静模式
-    Verbose::SetTh(Verbose::VERBOSITY_QUIET);
-    // Verbose::SetTh(Verbose::VERBOSITY_DEBUG);
+    // Verbose::SetTh(Verbose::VERBOSITY_QUIET);
+    Verbose::SetTh(Verbose::VERBOSITY_DEBUG);
 
 }
 
@@ -455,6 +455,17 @@ Sophus::SE3f System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const
     mTrackingState = mpTracker->mState;
     mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;
     mTrackedKeyPointsUn = mpTracker->mCurrentFrame.mvKeysUn;
+
+
+    // tm : save frame in reloc mode
+    // if (!mStrLoadAtlasFromFile.empty())
+    // {
+    //     // cout << "push" << endl;
+    //     mvBackupFrames.push_back(mpTracker->mCurrentFrame);
+    // }
+    // mvBackupFrames.push_back(mpTracker->mCurrentFrame);
+    //end tm
+
     return Tcw;
 }
 
@@ -535,6 +546,14 @@ Sophus::SE3f System::TrackRGBD_Wifi(const cv::Mat &im, const cv::Mat &depthmap, 
     mTrackingState = mpTracker->mState;
     mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;
     mTrackedKeyPointsUn = mpTracker->mCurrentFrame.mvKeysUn;
+
+    // tm : save frame in reloc mode
+    // if (!mStrLoadAtlasFromFile.empty())
+    // {
+    //     // cout << "push" << endl;
+    //     mvBackupFrames.push_back(mpTracker->mCurrentFrame);
+    // }
+    //end tm
     return Tcw;
 }
 
@@ -627,12 +646,12 @@ Sophus::SE3f System::TrackMonocular(const cv::Mat &im, const double &timestamp, 
     mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;
     mTrackedKeyPointsUn = mpTracker->mCurrentFrame.mvKeysUn;
 
-    // tm : save frame in reloc mode
-    if (!mStrLoadAtlasFromFile.empty())
-    {
-        // cout << "push" << endl;
-        mvBackupFrames.push_back(mpTracker->mCurrentFrame);
-    }
+    // tm : save frame in reloc mode or for wifi
+    // if (!mStrLoadAtlasFromFile.empty())
+    // {
+    //     // cout << "push" << endl;
+    //     mvBackupFrames.push_back(mpTracker->mCurrentFrame);
+    // }
     //end tm
     
     return Tcw;
@@ -721,11 +740,11 @@ Sophus::SE3f System::TrackMonocular_Wifi(const cv::Mat &im, const double &timest
     mTrackedKeyPointsUn = mpTracker->mCurrentFrame.mvKeysUn;
 
     // tm : save frame in reloc mode
-    if (!mStrLoadAtlasFromFile.empty())
-    {
-        // cout << "push" << endl;
-        mvBackupFrames.push_back(mpTracker->mCurrentFrame);
-    }
+    // if (!mStrLoadAtlasFromFile.empty())
+    // {
+    //     // cout << "push" << endl;
+    //     mvBackupFrames.push_back(mpTracker->mCurrentFrame);
+    // }
     //end tm
     
     return Tcw;
@@ -965,8 +984,10 @@ void System::SaveKeyFrameWiFiTrajectoryTUM(const string &filename)
         if (t(0) == 0 && t(1) == 0 && t(2) == 0 && q.x() == 0 && q.y() == 0 && q.z() == 0 && q.w() == 1)
             continue;
             
-        f << setprecision(6) << pKF->mTimeStamp << setprecision(7) << " " << t(0) << " " << t(1) << " " << t(2)
-          << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
+        // f << setprecision(6) << pKF->mTimeStamp << setprecision(7) << " " << t(0) << " " << t(1) << " " << t(2)
+        //   << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
+        f << setprecision(6) << pKF->mTimeStamp << setprecision(7) << " " << t(0) << " " << 0 << " " << t(2)
+            << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
 
     }
 
@@ -999,8 +1020,10 @@ void System::SaveKeyFrameTrajectoryTUM(const string &filename)
         Sophus::SE3f Twc = pKF->GetPoseInverse();
         Eigen::Quaternionf q = Twc.unit_quaternion();
         Eigen::Vector3f t = Twc.translation();
-        f << setprecision(6) << pKF->mTimeStamp << setprecision(7) << " " << t(0) << " " << t(1) << " " << t(2)
-          << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
+        // f << setprecision(6) << pKF->mTimeStamp << setprecision(7) << " " << t(0) << " " << t(1) << " " << t(2)
+        //   << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
+        f << setprecision(6) << pKF->mTimeStamp << setprecision(7) << " " << t(0) << " " << 0 << " " << t(2)
+            << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
 
     }
 
@@ -1964,59 +1987,84 @@ void System::SavePointcloudMap(){
 void System::SaveReLocTrajectoryTUM(const string &filename)
 {
     cout << endl << "Saving ReLoc trajectory to " << filename << " ..." << endl;
-    cout << "Frame size: "<<mvBackupFrames.size() <<endl;
+    mvpBackupFrames = mpTracker->mvpBackupFrames;
+    cout << "Frame size: "<<mvpBackupFrames.size() <<endl;
     // sort(mvBackupFrames.begin(),mvBackupFrames.end(),Frame::lId);
     Sophus::SE3<float> original;
 
-    // calculate range
-    vector<KeyFrame*> vpKFs = mpAtlas->GetAllKeyFrames();
+    // // calculate range
+    // vector<KeyFrame*> vpKFs = mpAtlas->GetAllKeyFrames();
 
-    float mnx = 1e9, mny = 1e9;
-    float mxx = -1e9, mxy = -1e9;
-    for(size_t i=0; i<vpKFs.size(); i++)
-    {
-        KeyFrame* pKF = vpKFs[i];
+    // float mnx = 1e9, mny = 1e9;
+    // float mxx = -1e9, mxy = -1e9;
+    // for(size_t i=0; i<vpKFs.size(); i++)
+    // {
+    //     KeyFrame* pKF = vpKFs[i];
 
-       // pKF->SetPose(pKF->GetPose()*Two);
+    //    // pKF->SetPose(pKF->GetPose()*Two);
 
-        if(pKF->isBad())
-            continue;
+    //     if(pKF->isBad())
+    //         continue;
 
-        Sophus::SE3f Twc = pKF->GetPoseInverse();
-        Eigen::Quaternionf q = Twc.unit_quaternion();
-        Eigen::Vector3f t = Twc.translation();
-        mnx = min(mnx,t(0)), mny = min(mny,t(2));
-        mxx = max(mxx, t(0)), mxy = max(mxy,t(2));
+    //     Sophus::SE3f Twc = pKF->GetPoseInverse();
+    //     Eigen::Quaternionf q = Twc.unit_quaternion();
+    //     Eigen::Vector3f t = Twc.translation();
+    //     mnx = min(mnx,t(0)), mny = min(mny,t(2));
+    //     mxx = max(mxx, t(0)), mxy = max(mxy,t(2));
 
-    }
+    // }
 
-    cout << "x range: " << mnx << ',' << mxx << endl;
-    cout << "y range: " << mny << ',' << mxy << endl;
+    // cout << "x range: " << mnx << ',' << mxx << endl;
+    // cout << "y range: " << mny << ',' << mxy << endl;
     ofstream f;
     f.open(filename.c_str());
     f << fixed;
+
+    ofstream fwifi;
+    string filename_wifi = "WiFi" + filename ;
+    fwifi.open(filename_wifi.c_str());
+    fwifi << fixed;
     
-    for(size_t i=0; i<mvBackupFrames.size(); i++)
+    for(size_t i=0; i<int(mvpBackupFrames.size()); i++)
     {
-        Frame pF = mvBackupFrames[i];
+        Frame* pF = mvpBackupFrames[i];
        // pKF->SetPose(pKF->GetPose()*Two);
 
-        if(pF.GetPose().matrix() == original.matrix())
+        if(pF->GetPose().matrix() == original.matrix())
             continue;
 
-        Sophus::SE3f Twc = pF.GetPose().inverse();
+        Sophus::SE3f Twc = pF->GetPose().inverse();
         Eigen::Quaternionf q = Twc.unit_quaternion();
         Eigen::Vector3f t = Twc.translation();
 
-        if(t(0) > mxx || t(0) < mnx || t(2) > mxy || t(2) < mny)
+        // if(t(0) > mxx || t(0) < mnx || t(2) > mxy || t(2) < mny)
+        //     continue;
+
+        f << setprecision(6) << pF->mTimeStamp << setprecision(7) << " " << t(0) << " " << t(1) << " " << t(2)
+          << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
+
+
+        /// save wifi frame traj for evaluation
+        if (!pF->HasPoseWiFi())
             continue;
 
-        f << setprecision(6) << pF.mTimeStamp << setprecision(7) << " " << t(0) << " " << t(1) << " " << t(2)
-          << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
+        Sophus::SE3f Twcwifi = pF->GetPoseWifi().inverse();
+        Eigen::Quaternionf qwifi = Twcwifi.unit_quaternion();
+        Eigen::Vector3f twifi = Twcwifi.translation();
+
+        if (twifi(0) == 0 && twifi(1) == 0 && twifi(2) == 0 && qwifi.x() == 0 && qwifi.y() == 0 && qwifi.z() == 0 && qwifi.w() == 1)
+            continue;
+            
+        // f << setprecision(6) << pKF->mTimeStamp << setprecision(7) << " " << t(0) << " " << t(1) << " " << t(2)
+        //   << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << endl;
+        fwifi << setprecision(6) << pF->mTimeStamp << setprecision(7) << " " << twifi(0) << " " << 0 << " " << twifi(2)
+            << " " << qwifi.x() << " " << qwifi.y() << " " << qwifi.z() << " " << qwifi.w() << endl;
 
     }
 
     f.close();
+    fwifi.close();
+
     
     cout << endl << "Successfully Saving ReLoc trajectory to " << filename << " ..." << endl;
 }

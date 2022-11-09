@@ -177,6 +177,10 @@ public:
         return mbHasPose;
     }
 
+    inline bool HasPoseWiFi() const{
+        return mbHasPoseWifi;
+    }
+
     inline bool HasVelocity() const {
         return mbHasVelocity;
     }
@@ -195,6 +199,7 @@ private:
     Eigen::Matrix<float,3,3> mRcw;
     Eigen::Matrix<float,3,1> mtcw;
     bool mbHasPose;
+    bool mbHasPoseWifi;
 
     // pose loc by wifi
     Sophus::SE3<float> mTcw_wifi;

@@ -293,8 +293,8 @@ private:
 
     Settings* settings_;
     
-    // tm - keep frame in reloc mode
-    std::vector<Frame> mvBackupFrames;
+    // tm - keep frame in reloc mode or for wifi evaluation
+    std::vector<Frame*> mvpBackupFrames;
 
     // tm for wifi
     std::mutex mMutexAllAps;

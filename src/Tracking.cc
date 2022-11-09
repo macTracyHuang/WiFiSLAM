@@ -1705,16 +1705,24 @@ Sophus::SE3f Tracking::GrabImageRGBD_Wifi(const cv::Mat &imRGB,const cv::Mat &im
     // const double startwifi_time = 1661769813;
 
     // if (mCurrentFrame.mTimeStamp > startwifi_time)
+    Verbose::PrintMess("Before TrackWithWiFi()", Verbose::VERBOSITY_DEBUG);
     bool WiFiOK = TrackWithWiFi();
-    // if (WiFiOK)
-    // {
-    //     // auto p = mCurrentFrame.GetPoseWifi().translation();
-    //     cout << "track with wifi: " << p <<endl;
-    // }
+    Verbose::PrintMess("End TrackWithWiFi()", Verbose::VERBOSITY_DEBUG);
+
 
     // Step 4：跟踪
     Track();
     
+    // add frame with wifi pose for evaluation
+    if (WiFiOK)
+    {
+        Verbose::PrintMess("Tack with wifi OK", Verbose::VERBOSITY_DEBUG);
+        // auto p = mCurrentFrame.GetPoseWifi().translation();
+        // cout << "track with wifi: " << p <<endl;
+        Frame* pf = new Frame(mCurrentFrame);
+        mvpBackupFrames.push_back(pf);
+    }
+
     // 返回当前帧的位姿
     return mCurrentFrame.GetPose();
 }
@@ -1879,7 +1887,7 @@ Sophus::SE3f Tracking::GrabImageMonocular_Wifi(const cv::Mat &im, const Fingerpr
         bool WiFiOK = TrackWithWiFi();
         if (WiFiOK)
         {
-            auto p = mCurrentFrame.GetPoseWifi().translation();
+            // auto p = mCurrentFrame.GetPoseWifi().translation();
             // cout << "track with wifi: " << p <<endl;
         }
     }
@@ -2859,6 +2867,8 @@ void Tracking::Track()
         }
     }
 #endif
+
+    Verbose::PrintMess("End Track()", Verbose::VERBOSITY_DEBUG);
 }
 
 /*
