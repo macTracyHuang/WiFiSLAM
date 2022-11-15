@@ -715,7 +715,18 @@ vector<cv::KeyPoint> ORBextractor::DistributeOctTree(const vector<cv::KeyPoint>&
     // Step 1 根据宽高比确定初始节点数目
 	//计算应该生成的初始节点个数，根节点的数量nIni是根据边界的宽高比值确定的，一般是1或者2
     // ! bug: 如果宽高比小于0.5，nIni=0, 后面hx会报错
-    const int nIni = round(static_cast<float>(maxX-minX)/(maxY-minY));
+
+    
+
+    //Fixed divide by zero in ORB extraction
+
+    // const int nIni = round(static_cast<float>(maxX-minX)/(maxY-minY));
+    int nIni = round(static_cast<float>(maxX-minX)/(maxY-minY));
+
+    if (nIni == 0)
+        nIni = 1;
+
+    //End Fixed divide by zero in ORB extraction
 
 	//一个初始的节点的x方向有多少个像素
     const float hX = static_cast<float>(maxX-minX)/nIni;

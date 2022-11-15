@@ -35,9 +35,9 @@ class Ap
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    Ap():mApPos(Eigen::Vector3f()), mBssid(""),mObservations(std::set<KeyFrame*>()),isInitial(false){}
-    Ap(const std::string &Bssid):mApPos(Eigen::Vector3f()),mBssid(Bssid),mObservations(std::set<KeyFrame*>()),isInitial(false){}
-    Ap(const Eigen::Vector3f &Pos, const std::string &Bssid):mApPos(Pos),mBssid(Bssid),mObservations(std::set<KeyFrame*>()),isInitial(false){}
+    Ap();
+    Ap(const std::string &Bssid);
+    Ap(const Eigen::Vector3f &Pos, const std::string &Bssid);
 
     // Copy constructor.
     Ap(const Ap &ap):mApPos(ap.mApPos), mBssid(ap.mBssid), mObservations(ap.mObservations),isInitial(ap.isInitial){}
@@ -89,6 +89,7 @@ public:
 
 
     int nObs;
+    static long unsigned int nNextId;
     long unsigned int mnId;
 protected:
     // Position in absolute coordinates

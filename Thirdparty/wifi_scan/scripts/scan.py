@@ -57,16 +57,26 @@ class Collection:
         # r = rospy.Rate(10) #10hz
 
         msg = Fingerprint()
+        
+        bssid_set = set()
 
         for bssid, rssi in zip(data[0], data[1]):
             addrssi = AddressRSSI()
             addrssi.address = bssid
             addrssi.rssi = rssi
-            msg.list.append(addrssi)
+
+            if bssid in bssid_set:
+                continue
+            else:
+                bssid_set.add(bssid)
+                msg.list.append(addrssi)
         
         msg.header.stamp = rospy.get_rostime()
         # rospy.loginfo(msg)
-        pub.publish(msg)
+
+        if len(bssid_set) > 0:
+            pub.publish(msg)
+
         print("Number of AP: ", len(data[0]))
         # r.sleep()
 

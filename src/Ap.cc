@@ -6,9 +6,24 @@
 namespace ORB_SLAM3
 {
 
+long unsigned int Ap::nNextId=0;
 std::mutex Ap::mApGlobalMutex;
 
-
+Ap::Ap():mApPos(Eigen::Vector3f()), mBssid(""),mObservations(std::set<KeyFrame*>()),isInitial(false)
+{
+    nObs = 0;
+    mnId=nNextId++;
+}
+Ap::Ap(const std::string &Bssid):mApPos(Eigen::Vector3f()),mBssid(Bssid),mObservations(std::set<KeyFrame*>()),isInitial(false)
+{
+    nObs = 0;
+    mnId=nNextId++;
+}
+Ap::Ap(const Eigen::Vector3f &Pos, const std::string &Bssid):mApPos(Pos),mBssid(Bssid),mObservations(std::set<KeyFrame*>()),isInitial(false)
+{
+    nObs = 0;
+    mnId=nNextId++;
+}
 
 void Ap::SetApPos(const Eigen::Vector3f &Pos)
 {

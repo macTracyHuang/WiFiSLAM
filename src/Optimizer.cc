@@ -49,6 +49,23 @@ bool sortByVal(const pair<MapPoint*, int> &a, const pair<MapPoint*, int> &b)
     return (a.second < b.second);
 }
 
+template <typename T>
+vector<size_t> sort_indexes(const vector<T> &v) {
+
+  // initialize original index locations
+  vector<size_t> idx(v.size());
+  iota(idx.begin(), idx.end(), 0);
+
+  // sort indexes based on comparing values in v
+  // using std::stable_sort instead of std::sort
+  // to avoid unnecessary index re-orderings
+  // when v contains elements of equal values 
+  stable_sort(idx.begin(), idx.end(),
+       [&v](size_t i1, size_t i2) {return v[i1] > v[i2];});
+
+  return idx;
+}
+
 void Optimizer::GlobalBundleAdjustemnt(Map* pMap, int nIterations, bool* pbStopFlag, const unsigned long nLoopKF, const bool bRobust)
 {
     vector<KeyFrame*> vpKFs = pMap->GetAllKeyFrames();
@@ -1177,7 +1194,8 @@ int Optimizer::PosePureWifiOptimization(Frame *pFrame)
         if (!ap->isInitial || ap->Observations() < thershold)
             continue;
 
-        vAp->setEstimate(ap->GetApPos().cast<double>());    
+        vAp->setEstimate(ap->GetApPos().cast<double>());
+        cout << "PosePureWifiOptimization: " << "Ap add vertex" << ap->mnId + 1 << endl;
         vAp->setId(ap->mnId + 1); // + 1 coz cam vertex
         vAp->setFixed(true);
         optimizer.addVertex(vAp);
@@ -1259,6 +1277,7 @@ int Optimizer::ApOptimization(KeyFrame *pKF)
 
     if (!pKF->bHasWifi)
         return 0;
+
     for(auto &ap:pKF->mpFingerprint->mvAp)
     {
         if (sLocalAps.count(ap))
@@ -1295,6 +1314,7 @@ int Optimizer::ApOptimization(KeyFrame *pKF)
     optimizer.setVerbose(false);
 
     unsigned long maxApid = 0;
+    cout << "Ap Opt Set Ap vertices" <<endl;
     // Set Ap vertices
     Verbose::PrintMess("Ap Opt Set Ap vertices", Verbose::VERBOSITY_DEBUG);
     for(auto &ap:sLocalAps)
@@ -1308,10 +1328,12 @@ int Optimizer::ApOptimization(KeyFrame *pKF)
         vAp->setId(ap->mnId);
         // cout << "add ap id: " << ap->mnId <<endl;
         vAp->setMarginalized(true);
+        cout << "add ap vertex: " << ap->mnId <<endl;
         optimizer.addVertex(vAp);
         if (ap->mnId > maxApid)
             maxApid = ap->mnId;
     }
+    cout << "Ap Opt Set cam vertices and edges" << endl;
     // Set cam vertices and edges
     Verbose::PrintMess("Ap Opt Set cam vertices and edges", Verbose::VERBOSITY_DEBUG);
     const int nExpectedSize = sFixedCameras.size()*sLocalAps.size();
@@ -1333,14 +1355,32 @@ int Optimizer::ApOptimization(KeyFrame *pKF)
         vSE3->setEstimate(g2o::SE3Quat(Twc.unit_quaternion().cast<double>(),Twc.translation().cast<double>()));
         vSE3->setId(pKFi->mnId + maxApid + 1);
         vSE3->setFixed(true);
+        cout << "add fixcam vertex: " << pKFi->mnId + maxApid + 1 <<endl;
         optimizer.addVertex(vSE3);
 
         auto vAp = pKFi->mpFingerprint->mvAp;
         auto vRssi = pKFi->mpFingerprint->mvRssi;
+
+        if (int(vAp.size()) != int(vRssi.size())) cout << "ap size is not euqal to rssi size" <<endl;
+
+        // // try only used top n aps
+        // int top_n = 20;
+        // vector<size_t> sorted_idx = sort_indexes(vRssi); // ascending
+        // int loopSize = min(int(vAp.size()), top_n);
+        
+        // for (auto &id:sorted_idx)
+        //     cout << id << endl;
+
+        // cout << "*****************" << endl;
+        // cout << loopSize << endl;
+        // cout << "*****************" << endl;
         //Set edges
         // cout << "set edge" <<endl;
+        // for (int j = 0; j < loopSize; j++)
         for (int i = 0; i < int(vAp.size()); i++)
         {
+            // int i = sorted_idx[j];
+
             auto ap = vAp[i];
             if (!sLocalAps.count(ap)) continue;
 
@@ -1372,6 +1412,8 @@ int Optimizer::ApOptimization(KeyFrame *pKF)
         }
     }
     
+
+    // start optimization
     if (nEdges)
     {
         optimizer.initializeOptimization();
@@ -1390,10 +1432,12 @@ int Optimizer::ApOptimization(KeyFrame *pKF)
     }
 
     Verbose::PrintMess("end ap optimized", Verbose::VERBOSITY_DEBUG);
+    return nEdges;
 }
 
 void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap, int& num_fixedKF, int& num_OptKF, int& num_MPs, int& num_edges)
 {
+    Verbose::PrintMess("Start LBA", Verbose::VERBOSITY_NORMAL);
     // Local KeyFrames: First Breath Search from Current Keyframe
     list<KeyFrame*> lLocalKeyFrames;
 
@@ -1777,7 +1821,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
 
     pMap->IncreaseChangeIndex();
 
-
+    Verbose::PrintMess("End LBA", Verbose::VERBOSITY_NORMAL);
     // const double startwifi_time = 1661769813 - 150;
     // if (pKF->mTimeStamp > startwifi_time)
     // tm add for wifi

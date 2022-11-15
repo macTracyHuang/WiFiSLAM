@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 
     if(argc != 3)
     {
-        cerr << endl << "Usage: rosrun ORB_SLAM3 RGBD path_to_vocabulary path_to_settings" << endl;        
+        cerr << endl << "Usage: rosrun ORB_SLAM3 RGBD_WiFi path_to_vocabulary path_to_settings" << endl;        
         ros::shutdown();
         return 1;
     }    
@@ -155,6 +155,7 @@ void ImageGrabber::GrabRGBD_Wifi(const sensor_msgs::ImageConstPtr& msgRGB,const 
     // // tm
     // else
 
+    cout << "before lock" << endl;
     // To do: decide when wifibuf should pop
     wifi_scan::FingerprintConstPtr msgWifi;
 
@@ -171,19 +172,28 @@ void ImageGrabber::GrabRGBD_Wifi(const sensor_msgs::ImageConstPtr& msgRGB,const 
         msgWifi = mpWifiGb->wifiBuf.back();
     }
     mpWifiGb->mBufMutex.unlock();
-
+    cout << "end lock and unlock" << endl;
     // mpSLAM->TrackRGBD(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec());
     // transfer ros msg to fingerprint.h ap.h
-
+    cout << "start" <<endl;
     if (msgWifi)
         mpSLAM->TrackRGBD_Wifi(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec(),mpWifiGb->msgToFp(msgWifi));
     else
         mpSLAM->TrackRGBD(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec());
     
+    cout << "end" <<endl;
+    
 }
 
 void WiFiGrabber::GrabWifi(const wifi_scan::FingerprintConstPtr& msgWifi)
 {
+    if (!msgWifi)
+    {
+        cout << "null ptr msgWifi" << endl;
+        return;
+    }
+        
+        
     mBufMutex.lock();
 
     if (!wifiBuf.empty())
@@ -207,10 +217,20 @@ ORB_SLAM3::Fingerprint::FingerprintPtr WiFiGrabber::msgToFp(const wifi_scan::Fin
     ORB_SLAM3::Fingerprint::FingerprintPtr fingerprint(new ORB_SLAM3::Fingerprint());
 
     int rssi_th = -60;
+    unordered_set<string> id_set;
     for (auto &addrssi: msgWifi->list)
     {
         string bssid = addrssi.address;
         int rssi = addrssi.rssi;
+
+        if (id_set.count(bssid))
+        {
+            cout << "already in bssid list" <<endl;
+            continue;
+        }
+        else
+            id_set.insert(bssid);
+
         // only remain rssi threshold
         if (rssi < rssi_th)
             continue;
@@ -220,11 +240,8 @@ ORB_SLAM3::Fingerprint::FingerprintPtr WiFiGrabber::msgToFp(const wifi_scan::Fin
         {
             boost::shared_ptr< ::ORB_SLAM3::Ap> mpNewAp(new ORB_SLAM3::Ap(bssid));
             mpSLAM->AddNewAp(mpNewAp);
-            mpNewAp->nObs = 0;
-            mpNewAp->mnId = mpSLAM->GetAllAps().size() + 1;
             Eigen::Vector3f pos(0,0,0);
             mpNewAp->SetApPos(pos);
-
             fingerprint->mvAp.push_back(mpNewAp);
             fingerprint->mvRssi.push_back(rssi);
         }
@@ -236,7 +253,9 @@ ORB_SLAM3::Fingerprint::FingerprintPtr WiFiGrabber::msgToFp(const wifi_scan::Fin
 
     }
 
-    assert(fingerprint->mvAp.size() == fingerprint->mvRssi.size());
+    if (fingerprint->mvAp.size() != fingerprint->mvRssi.size())
+        cout << "Assertion Error" <<endl;
+    // assert(fingerprint->mvAp.size() == fingerprint->mvRssi.size());
 
     return fingerprint;
 }

@@ -1183,6 +1183,7 @@ bool Tracking::ParseCamParamFile(cv::FileStorage &fSettings)
         else
         {
             std::cerr << "*Camera.bf parameter doesn't exist or is not a real number*" << std::endl;
+            cout << "*Camera.bf parameter doesn't exist or is not a real number*" << std::endl;
             b_miss_params = true;
         }
 
@@ -1664,7 +1665,7 @@ Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, co
  */
 Sophus::SE3f Tracking::GrabImageRGBD_Wifi(const cv::Mat &imRGB,const cv::Mat &imD, const Fingerprint::FingerprintPtr& fingerprint, const double &timestamp, string filename)
 {
-    Verbose::PrintMess("GrabImageRGBD_Wifi: wifi ap", Verbose::VERBOSITY_DEBUG);
+    Verbose::PrintMess("GrabImageRGBD_Wifi: start", Verbose::VERBOSITY_DEBUG);
     mimLeft = imRGB.clone();
     mImGray = imRGB;
     imDepth = imD.clone();
@@ -1690,9 +1691,11 @@ Sophus::SE3f Tracking::GrabImageRGBD_Wifi(const cv::Mat &imRGB,const cv::Mat &im
         imDepth.convertTo(imDepth,CV_32F,mDepthMapFactor);
 
     // Step 3：构造Frame with wifi
+    Verbose::PrintMess("GrabImageRGBD_Wifi: Construct Frame with WiFi", Verbose::VERBOSITY_DEBUG);
     if (mSensor == System::RGBD)
         mCurrentFrame = Frame(mImGray,imDepth,timestamp,fingerprint, mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,mpCamera);
 
+    Verbose::PrintMess("End GrabImageRGBD_Wifi: Construct Frame with WiFi", Verbose::VERBOSITY_DEBUG);
     mCurrentFrame.mNameFile = filename;
     mCurrentFrame.mnDataset = mnNumDataset;
 
@@ -1714,16 +1717,16 @@ Sophus::SE3f Tracking::GrabImageRGBD_Wifi(const cv::Mat &imRGB,const cv::Mat &im
     Track();
     
     // // add frame with wifi pose for evaluation
-    // if (WiFiOK)
-    // {
-    //     Verbose::PrintMess("Tack with wifi OK", Verbose::VERBOSITY_DEBUG);
-    //     // auto p = mCurrentFrame.GetPoseWifi().translation();
-    //     // cout << "track with wifi: " << p <<endl;
+    if (WiFiOK)
+    {
+        Verbose::PrintMess("Tack with wifi OK", Verbose::VERBOSITY_DEBUG);
+        // auto p = mCurrentFrame.GetPoseWifi().translation();
+        // cout << "track with wifi: " << p <<endl;
 
-    //     // backup frame for wifi frame evaluation
-    //     shared_ptr<Frame> pF(new Frame(mCurrentFrame));
-    //     mvpBackupFrames.push_back(pF);
-    // }
+        // // backup frame for wifi frame evaluation
+        // shared_ptr<Frame> pF(new Frame(mCurrentFrame));
+        // mvpBackupFrames.push_back(pF);
+    }
 
     // 返回当前帧的位姿
     return mCurrentFrame.GetPose();
@@ -2361,6 +2364,8 @@ void Tracking::Track()
                     bOK = TrackWithMotionModel();
                     if(!bOK)
                         bOK = TrackReferenceKeyFrame();  // 根据恒速模型失败了，只能根据参考关键帧来跟踪
+
+                    Verbose::PrintMess("TRACK: End Track with motion model", Verbose::VERBOSITY_DEBUG);
                 }
 
                 // 新增了一个状态RECENTLY_LOST，主要是结合IMU看看能不能拽回来
