@@ -108,9 +108,8 @@ int main(int argc, char **argv)
     SLAM.Shutdown();
 
     // Save camera trajectory
-    // SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
-    // SLAM.SaveKeyFrameWiFiTrajectoryTUM("KeyFrameWiFiTrajectory.txt");
-    SLAM.SaveReLocTrajectoryTUM("FrameTrajectory.txt");
+    SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
+    SLAM.SaveKeyFrameWiFiTrajectoryTUM("KeyFrameWiFiTrajectory.txt");
     SLAM.SaveApPlot("APPLOT.csv");
     // SLAM.SaveApInfo("APINFO.txt");
     // SLAM.SavePointcloudMap();

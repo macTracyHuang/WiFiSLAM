@@ -1168,6 +1168,7 @@ int Optimizer::PosePureWifiOptimization(Frame *pFrame)
     //Set Aps
     set<boost::shared_ptr< ::ORB_SLAM3::Ap>> sLocalAps;
     int thershold = 5;
+
     for (auto &ap:vAps)
     {
         // ap vertex

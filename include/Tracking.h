@@ -392,7 +392,7 @@ public:
     cv::Mat mImRight;
 
     // tm add for wifi frame traj
-    std::vector<Frame*> mvpBackupFrames;
+    std::vector<shared_ptr<Frame>> mvpBackupFrames;
 };
 
 } //namespace ORB_SLAM

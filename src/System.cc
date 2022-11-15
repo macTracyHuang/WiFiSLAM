@@ -2027,7 +2027,7 @@ void System::SaveReLocTrajectoryTUM(const string &filename)
     
     for(size_t i=0; i<int(mvpBackupFrames.size()); i++)
     {
-        Frame* pF = mvpBackupFrames[i];
+        shared_ptr<Frame> pF = mvpBackupFrames[i];
        // pKF->SetPose(pKF->GetPose()*Two);
 
         if(pF->GetPose().matrix() == original.matrix())

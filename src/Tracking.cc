@@ -1713,15 +1713,17 @@ Sophus::SE3f Tracking::GrabImageRGBD_Wifi(const cv::Mat &imRGB,const cv::Mat &im
     // Step 4：跟踪
     Track();
     
-    // add frame with wifi pose for evaluation
-    if (WiFiOK)
-    {
-        Verbose::PrintMess("Tack with wifi OK", Verbose::VERBOSITY_DEBUG);
-        // auto p = mCurrentFrame.GetPoseWifi().translation();
-        // cout << "track with wifi: " << p <<endl;
-        Frame* pf = new Frame(mCurrentFrame);
-        mvpBackupFrames.push_back(pf);
-    }
+    // // add frame with wifi pose for evaluation
+    // if (WiFiOK)
+    // {
+    //     Verbose::PrintMess("Tack with wifi OK", Verbose::VERBOSITY_DEBUG);
+    //     // auto p = mCurrentFrame.GetPoseWifi().translation();
+    //     // cout << "track with wifi: " << p <<endl;
+
+    //     // backup frame for wifi frame evaluation
+    //     shared_ptr<Frame> pF(new Frame(mCurrentFrame));
+    //     mvpBackupFrames.push_back(pF);
+    // }
 
     // 返回当前帧的位姿
     return mCurrentFrame.GetPose();
