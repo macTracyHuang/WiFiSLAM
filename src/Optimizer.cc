@@ -1195,7 +1195,7 @@ int Optimizer::PosePureWifiOptimization(Frame *pFrame)
             continue;
 
         vAp->setEstimate(ap->GetApPos().cast<double>());
-        cout << "PosePureWifiOptimization: " << "Ap add vertex" << ap->mnId + 1 << endl;
+        // cout << "PosePureWifiOptimization: " << "Ap add vertex" << ap->mnId + 1 << endl;
         vAp->setId(ap->mnId + 1); // + 1 coz cam vertex
         vAp->setFixed(true);
         optimizer.addVertex(vAp);
@@ -1237,7 +1237,7 @@ int Optimizer::PosePureWifiOptimization(Frame *pFrame)
     if (nEdges > edge_th)
     {
         optimizer.initializeOptimization();
-        optimizer.optimize(20);
+        optimizer.optimize(10);
 
         // Recover optimized data
         g2o::VertexSE3Expmap* vSE3_recov = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(0));
@@ -1314,7 +1314,7 @@ int Optimizer::ApOptimization(KeyFrame *pKF)
     optimizer.setVerbose(false);
 
     unsigned long maxApid = 0;
-    cout << "Ap Opt Set Ap vertices" <<endl;
+    // cout << "Ap Opt Set Ap vertices" <<endl;
     // Set Ap vertices
     Verbose::PrintMess("Ap Opt Set Ap vertices", Verbose::VERBOSITY_DEBUG);
     for(auto &ap:sLocalAps)
@@ -1328,12 +1328,11 @@ int Optimizer::ApOptimization(KeyFrame *pKF)
         vAp->setId(ap->mnId);
         // cout << "add ap id: " << ap->mnId <<endl;
         vAp->setMarginalized(true);
-        cout << "add ap vertex: " << ap->mnId <<endl;
+        // cout << "add ap vertex: " << ap->mnId <<endl;
         optimizer.addVertex(vAp);
         if (ap->mnId > maxApid)
             maxApid = ap->mnId;
     }
-    cout << "Ap Opt Set cam vertices and edges" << endl;
     // Set cam vertices and edges
     Verbose::PrintMess("Ap Opt Set cam vertices and edges", Verbose::VERBOSITY_DEBUG);
     const int nExpectedSize = sFixedCameras.size()*sLocalAps.size();
@@ -1355,7 +1354,7 @@ int Optimizer::ApOptimization(KeyFrame *pKF)
         vSE3->setEstimate(g2o::SE3Quat(Twc.unit_quaternion().cast<double>(),Twc.translation().cast<double>()));
         vSE3->setId(pKFi->mnId + maxApid + 1);
         vSE3->setFixed(true);
-        cout << "add fixcam vertex: " << pKFi->mnId + maxApid + 1 <<endl;
+        // cout << "add fixcam vertex: " << pKFi->mnId + maxApid + 1 <<endl;
         optimizer.addVertex(vSE3);
 
         auto vAp = pKFi->mpFingerprint->mvAp;
@@ -1363,7 +1362,7 @@ int Optimizer::ApOptimization(KeyFrame *pKF)
 
         if (int(vAp.size()) != int(vRssi.size())) cout << "ap size is not euqal to rssi size" <<endl;
 
-        // // try only used top n aps
+        // try only used top n aps
         // int top_n = 20;
         // vector<size_t> sorted_idx = sort_indexes(vRssi); // ascending
         // int loopSize = min(int(vAp.size()), top_n);
@@ -1822,8 +1821,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     pMap->IncreaseChangeIndex();
 
     Verbose::PrintMess("End LBA", Verbose::VERBOSITY_NORMAL);
-    // const double startwifi_time = 1661769813 - 150;
-    // if (pKF->mTimeStamp > startwifi_time)
+
     // tm add for wifi
     ApOptimization(pKF);
 }

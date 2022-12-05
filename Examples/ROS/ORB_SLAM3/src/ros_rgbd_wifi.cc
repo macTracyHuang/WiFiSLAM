@@ -78,8 +78,8 @@ int main(int argc, char **argv)
     }    
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    // ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::RGBD,true);
-    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::RGBD,false);
+    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::RGBD,true);
+    // ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::RGBD,false);
 
 
 
@@ -144,18 +144,6 @@ void ImageGrabber::GrabRGBD_Wifi(const sensor_msgs::ImageConstPtr& msgRGB,const 
         return;
     }
 
-    // tm demo block frame
-    
-    // const double block_time = 1661769533;
-    // if (mpSLAM->GetWifiMode() && floor(cv_ptrRGB->header.stamp.toSec()) >= block_time && floor(cv_ptrRGB->header.stamp.toSec()) < block_time + 4)
-    // {
-    //     cv::Mat blackImage = cv::Mat::zeros(cv::Size(640,480),CV_8UC1);
-    //     mpSLAM->TrackRGBD(blackImage,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec());
-    // }
-    // // tm
-    // else
-
-    cout << "before lock" << endl;
     // To do: decide when wifibuf should pop
     wifi_scan::FingerprintConstPtr msgWifi;
 
@@ -172,16 +160,41 @@ void ImageGrabber::GrabRGBD_Wifi(const sensor_msgs::ImageConstPtr& msgRGB,const 
         msgWifi = mpWifiGb->wifiBuf.back();
     }
     mpWifiGb->mBufMutex.unlock();
-    cout << "end lock and unlock" << endl;
-    // mpSLAM->TrackRGBD(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec());
+
     // transfer ros msg to fingerprint.h ap.h
-    cout << "start" <<endl;
-    if (msgWifi)
-        mpSLAM->TrackRGBD_Wifi(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec(),mpWifiGb->msgToFp(msgWifi));
+
+    // tm demo block frame
+    const bool BLOCK = true;
+
+    if (BLOCK)
+    {
+        const double block_time = 1668618743 + 150;
+        const int period = 5;
+        if (floor(cv_ptrRGB->header.stamp.toSec()) >= block_time && floor(cv_ptrRGB->header.stamp.toSec()) < block_time + period)
+        {
+            cv::Mat blackImage = cv::Mat::zeros(cv::Size(640,480),CV_8UC1);
+            if (msgWifi)
+                mpSLAM->TrackRGBD_Wifi(blackImage,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec(),mpWifiGb->msgToFp(msgWifi));
+            else
+                mpSLAM->TrackRGBD(blackImage,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec());
+        }          
+        else
+        {
+            if (msgWifi)
+                mpSLAM->TrackRGBD_Wifi(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec(),mpWifiGb->msgToFp(msgWifi));
+            else
+                mpSLAM->TrackRGBD(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec());
+        }       
+    }
     else
-        mpSLAM->TrackRGBD(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec());
+    {
+        if (msgWifi)
+            mpSLAM->TrackRGBD_Wifi(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec(),mpWifiGb->msgToFp(msgWifi));
+        else
+            mpSLAM->TrackRGBD(cv_ptrRGB->image,cv_ptrD->image,cv_ptrRGB->header.stamp.toSec());
+    }
+
     
-    cout << "end" <<endl;
     
 }
 

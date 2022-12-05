@@ -1,0 +1,127 @@
+
+ORB-SLAM3 Copyright (C) 2017-2020 Carlos Campos, Richard Elvira, Juan J. Gómez, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
+ORB-SLAM2 Copyright (C) 2014-2016 Raúl Mur-Artal, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
+This program comes with ABSOLUTELY NO WARRANTY;
+This is free software, and you are welcome to redistribute it
+under certain conditions. See LICENSE.txt.
+
+Input sensor was set to: RGB-D
+Loading settings from Examples/RGB-D/RealSense_D435i.yaml
+	-Loaded camera 1
+	-Loaded image info
+	-Loaded RGB-D calibration
+	-Loaded ORB settings
+	-Loaded viewer settings
+savePointCloud: 0
+	-Loaded Atlas settings
+sTurnWifi: 0
+	-Loaded misc parameters
+----------------------------------
+SLAM settings: 
+	-Camera 1 parameters (Pinhole): [ 604.697 604.299 330.383 251.562 ]
+	-Camera 1 distortion parameters: [  0 0 0 0 ]
+	-Original image size: [ 640 , 480 ]
+	-Current image size: [ 640 , 480 ]
+	-Sequence FPS: 15
+	-RGB-D depth map factor: 1000
+	-Features per image: 1000
+	-ORB scale factor: 1.2
+	-ORB number of scales: 6
+	-Initial FAST threshold: 20
+	-Min FAST threshold: 6
+
+
+Loading ORB Vocabulary. This could take a while...
+Vocabulary loaded!
+
+Initialization of Atlas from scratch 
+start to create new map
+Creation of new map with id: 0
+Creation of new map with last KF id: 0
+Seq. Name: 
+There are 1 cameras in the atlas
+Camera 0 is pinhole
+Starting the Viewer
+First KF:0; Map init KF:0
+New Map created with 999 points
+*Loop detected
+Local Mapping STOP
+Local Mapping RELEASE
+TRACK_REF_KF: Less than 15 matches!!
+Fail to track local map!
+ vpCandidateKFs: 1
+nmatches: 48
+nCandidates: 1
+Relocalized!!
+TRACK_REF_KF: Less than 15 matches!!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Fail to track local map!
+Reloc Track Lost, mState changed
+Fail to track local map!
+start to create new map
+Creation of new map with id: 1
+Stored map with ID: 0
+Creation of new map with last KF id: 1698
+First KF:1698; Map init KF:1698
+New Map created with 957 points
+*Merge detected
+Local Mapping STOP
+Change to map with id: 0
+Local Mapping RELEASE
+Local Mapping STOP
+Local Mapping RELEASE
+Merge finished!
+Local Mapping STOP
+Local Mapping RELEASE
+Shutdown
+mpLocalMapper is not finished
+mpLoopCloser is not finished
+
+Saving keyframe trajectory to KeyFrameTrajectory.txt ...
+
+Successfully Saving keyframe trajectory to KeyFrameTrajectory.txt ...
+
+Saving KeyFrameWiFiTrajectory to KeyFrameWiFiTrajectory.txt ...
+
+Successfully Saving KeyFrameWiFiTrajectory to KeyFrameWiFiTrajectory.txt ...
+
+Saving Ap plot to APPLOT.csv ...

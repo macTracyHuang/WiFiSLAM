@@ -298,8 +298,8 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
     // Fix verbosity
     // 打印输出中间的信息，设置为安静模式
-    // Verbose::SetTh(Verbose::VERBOSITY_QUIET);
-    Verbose::SetTh(Verbose::VERBOSITY_DEBUG);
+    Verbose::SetTh(Verbose::VERBOSITY_QUIET);
+    // Verbose::SetTh(Verbose::VERBOSITY_DEBUG);
 
 }
 
@@ -389,12 +389,14 @@ Sophus::SE3f System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, 
 
 Sophus::SE3f System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const double &timestamp, const vector<IMU::Point>& vImuMeas, string filename)
 {
+
+    
     if(mSensor!=RGBD  && mSensor!=IMU_RGBD)
     {
         cerr << "ERROR: you called TrackRGBD but input sensor was not set to RGBD." << endl;
         exit(-1);
     }
-    
+    Verbose::PrintMess("TrackRGBD: start", Verbose::VERBOSITY_DEBUG);
     cv::Mat imToFeed = im.clone();
     cv::Mat imDepthToFeed = depthmap.clone();
     if(settings_ && settings_->needToResize()){
@@ -465,7 +467,7 @@ Sophus::SE3f System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const
     // }
     // mvBackupFrames.push_back(mpTracker->mCurrentFrame);
     //end tm
-
+    Verbose::PrintMess("TrackRGBD: end", Verbose::VERBOSITY_DEBUG);
     return Tcw;
 }
 
@@ -485,7 +487,7 @@ Sophus::SE3f System::TrackRGBD_Wifi(const cv::Mat &im, const cv::Mat &depthmap, 
         cerr << "ERROR: you called TrackRGBD but input sensor was not set to RGBD." << endl;
         exit(-1);
     }
-    
+    Verbose::PrintMess("TrackRGBD_Wifi: start", Verbose::VERBOSITY_DEBUG);
     cv::Mat imToFeed = im.clone();
     cv::Mat imDepthToFeed = depthmap.clone();
     if(settings_ && settings_->needToResize()){
@@ -746,7 +748,7 @@ Sophus::SE3f System::TrackMonocular_Wifi(const cv::Mat &im, const double &timest
     //     mvBackupFrames.push_back(mpTracker->mCurrentFrame);
     // }
     //end tm
-    
+    Verbose::PrintMess("TrackRGBD_Wifi: end", Verbose::VERBOSITY_DEBUG);
     return Tcw;
 }
 

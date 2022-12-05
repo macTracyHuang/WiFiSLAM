@@ -68,7 +68,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
     : mState(NO_IMAGES_YET), mSensor(sensor), mTrackedFr(0), mbStep(false),
     mbOnlyTracking(false), mbMapUpdated(false), mbVO(false), mpORBVocabulary(pVoc), mpKeyFrameDB(pKFDB),
     mbReadyToInitializate(false), mpSystem(pSys), mpViewer(NULL), bStepByStep(false),
-    mpFrameDrawer(pFrameDrawer), mpMapDrawer(pMapDrawer), mpAtlas(pAtlas), mnLastRelocFrameId(0), time_recently_lost(5.0),
+    mpFrameDrawer(pFrameDrawer), mpMapDrawer(pMapDrawer), mpAtlas(pAtlas), mnLastRelocFrameId(0), time_recently_lost(10.0),
     mnInitialFrameId(0), mbCreatedMap(false), mnFirstFrameId(0), mpCamera2(nullptr), mpLastKeyFrame(static_cast<KeyFrame*>(NULL))
 {
     // Load camera parameters from settings file
@@ -1704,29 +1704,14 @@ Sophus::SE3f Tracking::GrabImageRGBD_Wifi(const cv::Mat &imRGB,const cv::Mat &im
 #endif
 
     
-    // try pure wifi tracking:
-    // const double startwifi_time = 1661769813;
 
-    // if (mCurrentFrame.mTimeStamp > startwifi_time)
-    Verbose::PrintMess("Before TrackWithWiFi()", Verbose::VERBOSITY_DEBUG);
-    bool WiFiOK = TrackWithWiFi();
-    Verbose::PrintMess("End TrackWithWiFi()", Verbose::VERBOSITY_DEBUG);
+    // Verbose::PrintMess("Before TrackWithWiFi()", Verbose::VERBOSITY_DEBUG);
+    // bool WiFiOK = TrackWithWiFi();
+    // Verbose::PrintMess("End TrackWithWiFi()", Verbose::VERBOSITY_DEBUG);
 
 
     // Step 4：跟踪
     Track();
-    
-    // // add frame with wifi pose for evaluation
-    if (WiFiOK)
-    {
-        Verbose::PrintMess("Tack with wifi OK", Verbose::VERBOSITY_DEBUG);
-        // auto p = mCurrentFrame.GetPoseWifi().translation();
-        // cout << "track with wifi: " << p <<endl;
-
-        // // backup frame for wifi frame evaluation
-        // shared_ptr<Frame> pF(new Frame(mCurrentFrame));
-        // mvpBackupFrames.push_back(pF);
-    }
 
     // 返回当前帧的位姿
     return mCurrentFrame.GetPose();
@@ -1884,18 +1869,6 @@ Sophus::SE3f Tracking::GrabImageMonocular_Wifi(const cv::Mat &im, const Fingerpr
 #endif
 
     lastID = mCurrentFrame.mnId;
-    
-    // Track with wifi
-    if (mCurrentFrame.HasWifi())
-    {
-
-        bool WiFiOK = TrackWithWiFi();
-        if (WiFiOK)
-        {
-            // auto p = mCurrentFrame.GetPoseWifi().translation();
-            // cout << "track with wifi: " << p <<endl;
-        }
-    }
 
     // Step 3 ：跟踪
     Track();
@@ -2161,6 +2134,7 @@ void Tracking::Track()
     }
     else
         Verbose::PrintMess("Track Without WiFi", Verbose::VERBOSITY_DEBUG);
+
     if (bStepByStep)
     {
         std::cout << "Tracking: Waiting to the next step" << std::endl;
@@ -2321,6 +2295,7 @@ void Tracking::Track()
         // System is initialized. Track Frame.
         // Step 6 系统成功初始化，下面是具体跟踪过程
         bool bOK;
+        bool bWiFiOK = false;
 
 #ifdef REGISTER_TIMES
         std::chrono::steady_clock::time_point time_StartPosePred = std::chrono::steady_clock::now();
@@ -2430,9 +2405,20 @@ void Tracking::Track()
                         bOK = Relocalization();
                         //std::cout << "mCurrentFrame.mTimeStamp:" << to_string(mCurrentFrame.mTimeStamp) << std::endl;
                         //std::cout << "mTimeStampLost:" << to_string(mTimeStampLost) << std::endl;
-                        if(mCurrentFrame.mTimeStamp-mTimeStampLost>3.0f && !bOK)
+                        if (!bOK && bHasWifi)
+                        {
+                            bWiFiOK = TrackWithWiFi();
+                            if (bWiFiOK)
+                            {
+                                std::cout << "Track With WiFi OK" << std::endl;
+                                // mCurrentFrame.SetPose(mCurrentFrame.GetPoseWifi());
+                                bOK = true;
+                            }
+                        }
+                        else if(mCurrentFrame.mTimeStamp-mTimeStampLost>3.0f && !bOK)
                         {
                             // 纯视觉模式下重定位失败，状态为LOST
+                            std::cout << "Reloc Track Lost, mState changed" << std::endl;
                             mState = LOST;
                             Verbose::PrintMess("Track Lost...", Verbose::VERBOSITY_NORMAL);
                             bOK=false;
@@ -2587,14 +2573,21 @@ void Tracking::Track()
         // 然后将局部MapPoints和当前帧进行投影匹配，得到更多匹配的MapPoints后进行Pose优化
         // If we have an initial estimation of the camera pose and matching. Track the local map.
         if(!mbOnlyTracking)
-        {
-            if(bOK)
+        {   
+            if (!bWiFiOK)
             {
-                // 局部地图跟踪
-                bOK = TrackLocalMap();
+                if(bOK)
+                {
+                    // 局部地图跟踪
+                    bOK = TrackLocalMap();
+                }
+                if(!bOK)
+                    std::cout << "Fail to track local map!" << endl;
             }
-            if(!bOK)
-                std::cout << "Fail to track local map!" << endl;
+            else
+            {
+                std::cout << "Wifi ok in step 7, do not TrackLocalMap" << endl;
+            }
         }
         else
         {
@@ -2692,6 +2685,8 @@ void Tracking::Track()
         mpFrameDrawer->Update(this);
         if(mCurrentFrame.isSet())
             mpMapDrawer->SetCurrentCameraPose(mCurrentFrame.GetPose());
+        else if (bWiFiOK)
+            mpMapDrawer->SetCurrentCameraPose(mCurrentFrame.GetPoseWifi());
 
         // 查看到此为止时的两个状态变化
         // bOK的历史变化---上一帧跟踪成功---当前帧跟踪成功---局部地图跟踪成功---true
@@ -4595,6 +4590,7 @@ void Tracking::UpdateLocalKeyFrames()
  */
 bool Tracking::Relocalization()
 {
+    std::cout << "Starting relocalization" << endl;
     Verbose::PrintMess("Starting relocalization", Verbose::VERBOSITY_NORMAL);
     // Compute Bag of Words Vector
     // Step 1: 计算当前帧特征点的Bow映射
@@ -4611,7 +4607,6 @@ bool Tracking::Relocalization()
     }
 
     const int nKFs = vpCandidateKFs.size();
-    cout << " vpCandidateKFs: " << nKFs<<endl;
     // We perform first an ORB matching with each candidate
     // If enough matches are found we setup a PnP solver
     ORBmatcher matcher(0.75,true);
