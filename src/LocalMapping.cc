@@ -368,7 +368,7 @@ void LocalMapping::InsertKeyFrame(KeyFrame *pKF)
 {
     unique_lock<mutex> lock(mMutexNewKFs);
     // 将关键帧插入到列表中
-    mlNewKeyFrames.push_back(pKF);
+    mlNewKeyFrames.push_back(pKF);        
     mbAbortBA=true;
 }
 

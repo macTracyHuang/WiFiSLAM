@@ -316,6 +316,7 @@ public:
     Fingerprint::FingerprintPtr mpFingerprint;
     // void SetFingerprint(const Fingerprint &fingerprint);
     bool bHasWifi;
+    bool mbHasPoseWifi;
 
     // The following variables are accesed from only 1 thread or never change (no mutex needed).
 public:

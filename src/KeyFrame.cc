@@ -37,7 +37,7 @@ KeyFrame::KeyFrame()
     mfLogScaleFactor(0), mvScaleFactors(0), mvLevelSigma2(0), mvInvLevelSigma2(0), mnMinX(0), mnMinY(0), mnMaxX(0),
     mnMaxY(0), mPrevKF(static_cast<KeyFrame *>(NULL)), mNextKF(static_cast<KeyFrame *>(NULL)), mbFirstConnection(true), mpParent(NULL), mbNotErase(false),
     mbToBeErased(false), mbBad(false), mHalfBaseline(0), mbCurrentPlaceRecognition(false), mnMergeCorrectedForKF(0),
-    NLeft(0), NRight(0), mnNumberOfOpt(0), mbHasVelocity(false), bHasWifi(0)
+    NLeft(0), NRight(0), mnNumberOfOpt(0), mbHasVelocity(false), bHasWifi(false), mbHasPoseWifi(false)
 {
 }
 
@@ -58,7 +58,7 @@ KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB)
     mbToBeErased(false), mbBad(false), mHalfBaseline(F.mb / 2), mpMap(pMap), mbCurrentPlaceRecognition(false), mNameFile(F.mNameFile), mnMergeCorrectedForKF(0),
     mpCamera(F.mpCamera), mpCamera2(F.mpCamera2),
     mvLeftToRightMatch(F.mvLeftToRightMatch), mvRightToLeftMatch(F.mvRightToLeftMatch), mTlr(F.GetRelativePoseTlr()),
-    mvKeysRight(F.mvKeysRight), NLeft(F.Nleft), NRight(F.Nright), mTrl(F.GetRelativePoseTrl()), mnNumberOfOpt(0), mbHasVelocity(false), mpFingerprint(F.mpFingerprint),bHasWifi(F.HasWifi()), mTcw_wifi(F.GetPoseWifi())
+    mvKeysRight(F.mvKeysRight), NLeft(F.Nleft), NRight(F.Nright), mTrl(F.GetRelativePoseTrl()), mnNumberOfOpt(0), mbHasVelocity(false), mpFingerprint(F.mpFingerprint),bHasWifi(F.HasWifi()), mbHasPoseWifi(F.HasPoseWiFi())
 {
     mnId = nNextId++;
 
@@ -95,6 +95,11 @@ KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB)
     mImuBias = F.mImuBias;
     SetPose(F.GetPose());
 
+    if (F.HasPoseWiFi())
+    {
+        SetPoseWiFi(F.GetPoseWifi());
+    }
+        
     mnOriginMapId = pMap->GetId();
 }
 
@@ -120,7 +125,7 @@ void KeyFrame::SetPose(const Sophus::SE3f &Tcw)
     mTwc = mTcw.inverse();
     mRwc = mTwc.rotationMatrix();
 
-    if (mImuCalib.mbIsSet) // TODO Use a flag instead of the OpenCV matrix
+    if (mImuCalib.mbIsSet) // TODO Use a flag instead of the OpenCV matrixse
     {
         mOwb = mRwc * mImuCalib.mTcb.translation() + mTwc.translation();
     }
@@ -130,6 +135,7 @@ void KeyFrame::SetPoseWiFi(const Sophus::SE3f &Tcw)
 {
     unique_lock<mutex> lock(mMutexPoseWifi);
     mTcw_wifi = Tcw;
+    mbHasPoseWifi = true;
 }
 
 void KeyFrame::SetVelocity(const Eigen::Vector3f &Vw)

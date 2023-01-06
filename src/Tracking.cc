@@ -1704,7 +1704,7 @@ Sophus::SE3f Tracking::GrabImageRGBD_Wifi(const cv::Mat &imRGB,const cv::Mat &im
 #endif
 
     
-
+    // Always track with wifi
     // Verbose::PrintMess("Before TrackWithWiFi()", Verbose::VERBOSITY_DEBUG);
     // bool WiFiOK = TrackWithWiFi();
     // Verbose::PrintMess("End TrackWithWiFi()", Verbose::VERBOSITY_DEBUG);
@@ -2126,9 +2126,13 @@ void Tracking::Track()
 {
     Verbose::PrintMess("Start Track()", Verbose::VERBOSITY_DEBUG);
     bool bHasWifi = mCurrentFrame.HasWifi();
+    bool bWiFiOK = false;
+
     if (bHasWifi)
     {
         Verbose::PrintMess("Track With WiFi", Verbose::VERBOSITY_DEBUG);
+        bWiFiOK = TrackWithWiFi();
+
         // cout << "test lock" <<endl;
         // cout << mCurrentFrame.mpFingerprint->mvAp[0]->Observations() <<endl;
     }
@@ -2295,7 +2299,6 @@ void Tracking::Track()
         // System is initialized. Track Frame.
         // Step 6 系统成功初始化，下面是具体跟踪过程
         bool bOK;
-        bool bWiFiOK = false;
 
 #ifdef REGISTER_TIMES
         std::chrono::steady_clock::time_point time_StartPosePred = std::chrono::steady_clock::now();
@@ -2407,7 +2410,7 @@ void Tracking::Track()
                         //std::cout << "mTimeStampLost:" << to_string(mTimeStampLost) << std::endl;
                         if (!bOK && bHasWifi)
                         {
-                            bWiFiOK = TrackWithWiFi();
+                            // bWiFiOK = TrackWithWiFi();
                             if (bWiFiOK)
                             {
                                 std::cout << "Track With WiFi OK" << std::endl;
@@ -2767,6 +2770,8 @@ void Tracking::Track()
             if(bNeedKF && (bOK || (mInsertKFsLost && mState==RECENTLY_LOST &&
                                    (mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD))))
             {
+                // if (bWiFiOK)
+                //     cout << mCurrentFrame.GetPoseWifi().inverse().translation() << endl;
                 CreateNewKeyFrame();  // 创建关键帧，对于双目或RGB-D会产生新的地图点
             }
                 
@@ -3686,10 +3691,11 @@ bool Tracking::TrackWithMotionModel()
  */
 bool Tracking::TrackWithWiFi()
 {
+    const int edge_th = 3;
     Verbose::PrintMess("TrackWithWiFi ", Verbose::VERBOSITY_DEBUG);
     int nEdges = Optimizer::PosePureWifiOptimization(&mCurrentFrame);
     // cout << "track wifi nEdges: " << nEdges << endl;
-    return nEdges > 0;
+    return nEdges > edge_th;
 }
 
 /**
@@ -4213,16 +4219,6 @@ void Tracking::CreateNewKeyFrame()
 
     }
 
-    // insert keyframe
-    mpLocalMapper->InsertKeyFrame(pKF);
-
-    // 插入好了，允许局部建图停止
-    mpLocalMapper->SetNotStop(false);
-
-    // 当前帧成为新的关键帧，更新
-    mnLastKeyFrameId = mCurrentFrame.mnId;
-    mpLastKeyFrame = pKF;
-
     // tm add for wifi add new ap obervation
     if (mCurrentFrame.HasWifi())
     {
@@ -4234,9 +4230,20 @@ void Tracking::CreateNewKeyFrame()
             ap->AddObservation(pKF);
             // cout <<"new obs " << ap->GetBssid() << ":" << ap->Observations() << endl;
         }
-
-        pKF->SetPoseWiFi(mCurrentFrame.GetPoseWifi());
+ 
     }
+
+    // insert keyframe
+    mpLocalMapper->InsertKeyFrame(pKF);
+
+    // 插入好了，允许局部建图停止
+    mpLocalMapper->SetNotStop(false);
+
+    // 当前帧成为新的关键帧，更新
+    mnLastKeyFrameId = mCurrentFrame.mnId;
+    mpLastKeyFrame = pKF;
+
+
 }
 
 /**

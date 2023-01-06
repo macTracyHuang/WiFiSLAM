@@ -112,6 +112,7 @@ void KeyFrameDatabase::clearMap(Map *pMap)
  */
 vector<KeyFrame *> KeyFrameDatabase::DetectLoopCandidates(KeyFrame *pKF, float minScore)
 {
+
     // 取出与当前关键帧相连（>15个共视地图点）的所有关键帧，这些相连关键帧都是局部相连，在闭环检测的时候将被剔除
     // 相连关键帧定义见 KeyFrame::UpdateConnections()
     set<KeyFrame *> spConnectedKeyFrames = pKF->GetConnectedKeyFrames();
@@ -139,6 +140,8 @@ vector<KeyFrame *> KeyFrameDatabase::DetectLoopCandidates(KeyFrame *pKF, float m
                 {
                     if (pKFi->mnLoopQuery != pKF->mnId)
                     {
+                        
+
                         // 还没有标记为pKF的闭环候选帧
                         pKFi->mnLoopWords = 0;
                         // 和当前关键帧共视的话不作为闭环候选帧
@@ -154,6 +157,9 @@ vector<KeyFrame *> KeyFrameDatabase::DetectLoopCandidates(KeyFrame *pKF, float m
             }
         }
     }
+
+    
+
     // 如果没有关键帧和这个关键帧具有相同的单词,那么就返回空
     if (lKFsSharingWords.empty())
         return vector<KeyFrame *>();
@@ -648,6 +654,7 @@ bool compFirst(const pair<float, KeyFrame *> &a, const pair<float, KeyFrame *> &
  */
 void KeyFrameDatabase::DetectNBestCandidates(KeyFrame *pKF, vector<KeyFrame *> &vpLoopCand, vector<KeyFrame *> &vpMergeCand, int nNumCandidates)
 {
+
     // Step 1统计与当前关键帧有相同单词的关键帧
     list<KeyFrame *> lKFsSharingWords;
     // set<KeyFrame*> spInsertedKFsSharing;
@@ -659,8 +666,26 @@ void KeyFrameDatabase::DetectNBestCandidates(KeyFrame *pKF, vector<KeyFrame *> &
         unique_lock<mutex> lock(mMutex);
         // 拿到当前关键帧的共视关键帧
         spConnectedKF = pKF->GetConnectedKeyFrames();
+        
+
+        // Get Current KeyFrame Wifi Pose
+        Sophus::SE3f KFWiFiPose;
+        Eigen::Vector3f KF_t;
+        if (pKF->mbHasPoseWifi)
+        {
+            KFWiFiPose = pKF->GetPoseWifi().inverse();
+            KF_t = KFWiFiPose.translation();
+            // std::cout << pKF->mnId << endl << KF_t << endl;
+        }
+        else
+        {
+            // Only detect loop when current keyframe has wifipose -> in order to test false loop closure prevention
+            return;
+        }
 
         // 遍历当前关键帧bow向量的每个单词
+        Sophus::SE3f KFiPose;
+        Eigen::Vector3f KFi_t;
         for (DBoW2::BowVector::const_iterator vit = pKF->mBowVec.begin(), vend = pKF->mBowVec.end(); vit != vend; vit++)
         { // 拿到当前单词的逆向索引(所有有当前单词的关键帧)
             list<KeyFrame *> &lKFs = mvInvertedFile[vit->first];
@@ -672,6 +697,26 @@ void KeyFrameDatabase::DetectNBestCandidates(KeyFrame *pKF, vector<KeyFrame *> &
                 {
                     continue;
                 }*/
+
+                // check if the distance between current frame wifi pose and kf in database pose is within the threshold
+                KFiPose = pKFi->GetPose().inverse();
+                float THRESHOLD = 10;
+                KFi_t = KFiPose.translation();
+                float dis = sqrt(pow((KFi_t[0] - KF_t[0]),2) + pow((KFi_t[1] - KF_t[1]),2) + pow((KFi_t[2] - KF_t[2]),2));
+                // std::cout << "=============" <<endl;                      
+                // std::cout << pKFi->mnId << endl << KFi_t << endl;
+
+                if (dis >= THRESHOLD)
+                {
+                    // if it's out of threshold, we donot consider pkfi as a candidate
+                    // std::cout << "out of threshold:  "  <<  dis << endl;
+                    continue;
+                }
+                else
+                {
+                    // std::cout << "within threshold: " << dis << endl;
+                }
+
                 // 如果此关键帧没有被当前关键帧访问过(防止重复添加)
                 if (pKFi->mnPlaceRecognitionQuery != pKF->mnId)
                 {
@@ -696,6 +741,8 @@ void KeyFrameDatabase::DetectNBestCandidates(KeyFrame *pKF, vector<KeyFrame *> &
             }
         }
     }
+
+
     // 如果没有有公共单词的关键帧,直接返回
     if (lKFsSharingWords.empty())
         return;
@@ -708,6 +755,7 @@ void KeyFrameDatabase::DetectNBestCandidates(KeyFrame *pKF, vector<KeyFrame *> &
         if ((*lit)->mnPlaceRecognitionWords > maxCommonWords)
             maxCommonWords = (*lit)->mnPlaceRecognitionWords;
     }
+
     // 取0.8倍为阀值
     int minCommonWords = maxCommonWords * 0.8f;
     // 这里的pair是 <相似度,候选帧的指针> : 记录所有大于minCommonWords的候选帧与当前关键帧的相似度
@@ -735,6 +783,7 @@ void KeyFrameDatabase::DetectNBestCandidates(KeyFrame *pKF, vector<KeyFrame *> &
         }
     }
     // 如果为空,直接返回,表示没有符合上述条件的关键帧
+
     if (lScoreAndMatch.empty())
         return;
     // Step 3 : 用小组得分排序得到top3总分里最高分的关键帧,作为候选帧
@@ -780,6 +829,7 @@ void KeyFrameDatabase::DetectNBestCandidates(KeyFrame *pKF, vector<KeyFrame *> &
     }
 
     // cout << "Amount of candidates: " << lAccScoreAndMatch.size() << endl;
+
     //  按相似度从大到小排序
     lAccScoreAndMatch.sort(compFirst);
     // 最后返回的变量, 记录回环的候选帧
