@@ -1270,6 +1270,17 @@ int Optimizer::PosePureWifiOptimization(Frame *pFrame)
         // cout << "visual pos: " << pFrame->GetPose().translation();
     }
 
+
+    // Calculate Hessian matrix and get eigenvalues
+    // cout << "=============================" << endl;
+    Eigen::Matrix<double, 3, 3> H = Eigen::Matrix<double, 3, 3>::Zero();
+    for (auto &e: vpApEdges){
+        auto h = e->GetHessian();
+        H += h;
+    }
+
+    pFrame->mWiFiHessian = H;
+
     Verbose::PrintMess("End PosePureWifiOptimization", Verbose::VERBOSITY_DEBUG);
     
     return nEdges;

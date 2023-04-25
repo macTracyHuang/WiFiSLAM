@@ -59,7 +59,7 @@ KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB)
     mpCamera(F.mpCamera), mpCamera2(F.mpCamera2),
     mvLeftToRightMatch(F.mvLeftToRightMatch), mvRightToLeftMatch(F.mvRightToLeftMatch), mTlr(F.GetRelativePoseTlr()),
     mvKeysRight(F.mvKeysRight), NLeft(F.Nleft), NRight(F.Nright), mTrl(F.GetRelativePoseTrl()), mnNumberOfOpt(0), mbHasVelocity(false), mpFingerprint(F.mpFingerprint),bHasWifi(F.HasWifi()), mbHasPoseWifi(F.HasPoseWiFi()),
-    minEigenValue(F.minEigenValue),mHessian(F.mHessian)
+    minEigenValue(F.minEigenValue),mHessian(F.mHessian),mWiFiHessian(F.mWiFiHessian)
 {
     mnId = nNextId++;
 

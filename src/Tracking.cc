@@ -2602,6 +2602,7 @@ void Tracking::Track()
             else
             {
                 std::cout << "Wifi ok in step 7, do not TrackLocalMap" << endl;
+                std::cout << mCurrentFrame.mWiFiHessian << std::endl;
             }
         }
         else

@@ -1030,6 +1030,25 @@ class ApEdge: public g2o::BaseBinaryEdge<1, Vector1d, g2o::VertexSBAPointXYZ, g2
         _error(0,0) =  obs - prediction;
     }      
 
+
+        // add by tm
+    Eigen::Matrix<double, 1, 3> GetJacobian()
+    {
+        linearizeOplus();
+        Eigen::Matrix<double, 1, 3> J;
+        J = _jacobianOplusXi;
+        return J;
+    }
+
+    Eigen::Matrix<double, 3, 3> GetHessian()
+    {
+        linearizeOplus();
+        Eigen::Matrix<double, 1, 3> J;
+        J = _jacobianOplusXi;
+        // return J.transpose() * information() * J;
+        return J.transpose() * J;
+    }
+
     virtual bool read(istream& in) {}
     virtual bool write(ostream& out) const {}
 

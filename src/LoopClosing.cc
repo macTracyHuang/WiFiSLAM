@@ -595,6 +595,9 @@ bool LoopClosing::NewDetectCommonRegions()
 #endif
         // 分别找到3个最好的候选帧, 回环候选帧放在vpLoopBowCand中,融合候选帧放在vpMergeBowCand中
         mpKeyFrameDB->DetectNBestCandidates(mpCurrentKF, vpLoopBowCand, vpMergeBowCand,3);
+
+        // for testing wifi filtering in case of false loop detection
+        // mpKeyFrameDB->DetectNBestCandidatesWithWiFi(mpCurrentKF, vpLoopBowCand, vpMergeBowCand,3);
 #ifdef REGISTER_TIMES
         std::chrono::steady_clock::time_point time_EndQuery = std::chrono::steady_clock::now();
 
@@ -635,8 +638,54 @@ bool LoopClosing::NewDetectCommonRegions()
     // 如果检测到一种类型共同区域返回true
     if(mbMergeDetected || mbLoopDetected)
     {
+
+        // Calculate frame Hessian similarity add by tm for false loop experiment
+        for (auto &candFrame:vpLoopBowCand){
+            auto candHessian = candFrame->mHessian;
+            auto diff = candHessian - mpCurrentKF->mHessian;
+            auto norm = diff.norm();
+            // if (norm == 0)
+            //     continue;
+            std::cout << "Loop Hessian similarity: " << norm << std::endl;
+
+            auto candWiFiHessian = candFrame->mWiFiHessian;
+            auto diffWiFi = candWiFiHessian - mpCurrentKF->mWiFiHessian;
+            auto normWiFi = diffWiFi.norm();
+            std::cout << "Loop WiFi Hessian similarity: " << normWiFi << std::endl;
+        }
+        // end add by tm
+
         return true;
     }
+    
+    // non loop frame hessian similarity add by tm for false loop experiment
+    long long totalNorm = 0, cnt = 0;
+    long long totalWiFiNorm = 0, cntWiFi = 0;
+
+    for (auto &candFrame:mpCurrentKF->GetMap()->GetAllKeyFrames()){
+        auto candHessian = candFrame->mHessian;
+        auto diff = candHessian - mpCurrentKF->mHessian;
+        auto norm = diff.norm();
+        // std::cout << "Hessian similarity: " << norm << std::endl;
+
+        auto candWiFiHessian = candFrame->mWiFiHessian;
+        auto diffWiFi = candWiFiHessian - mpCurrentKF->mWiFiHessian;
+        auto normWiFi = diffWiFi.norm();
+
+        if (norm != 0){
+            totalNorm += norm;
+            cnt++;
+        }
+
+        if (normWiFi != 0){
+            totalWiFiNorm += normWiFi;
+            cntWiFi++;
+        }
+    }
+    auto wifiavg = (cntWiFi == 0) ? 0 : totalWiFiNorm / cntWiFi;
+    std::cout << "Average Hessian similarity: " << totalNorm / cnt << std::endl;
+    std::cout << "Average WiFi Hessian similarity: " << wifiavg << std::endl;
+
     // 如果没检测到则把当前关键帧erase(不参与后续共同区域检测)
     mpCurrentKF->SetErase();
     // 标记当前关键帧不是当前在进行共同区域检测的帧

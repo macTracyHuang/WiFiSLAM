@@ -93,3 +93,12 @@ target_link_libraries(Mono_WiFi
 ${LIBS}
 )
 # add_dependencies(Mono_WiFi wifi_scan_gencpp)
+
+
+# Node for Mono
+rosbuild_add_executable(Mono
+src/ros_mono.cc
+)
+target_link_libraries(Mono
+${LIBS}
+)
