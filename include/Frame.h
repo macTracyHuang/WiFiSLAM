@@ -242,6 +242,7 @@ public:
     static float invfy;
     cv::Mat mDistCoef;
     double minEigenValue;
+    Eigen::Matrix<double, 6, 6> mHessian;
 
     // Stereo baseline multiplied by fx.
     float mbf;

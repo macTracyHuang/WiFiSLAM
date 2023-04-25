@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     }
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::RGBD,true);
+    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::RGBD,false);
     float imageScale = SLAM.GetImageScale();
 
     // Vector for tracking time statistics
@@ -206,7 +206,7 @@ int main(int argc, char **argv)
 
     std::vector<std::string> ret = split(string(argv[3]), '/');
     std::string prefix = ret[ret.size()-1];
-    SLAM.SaveFrameInfo("/root/ORB_SLAM3/evaluation/Ground_truth/" + prefix);
+    SLAM.SaveFrameInfo("/root/Thesis_code/evaluateEigen/Result/" + prefix);
     return 0;
 }
 

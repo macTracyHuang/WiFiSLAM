@@ -435,6 +435,8 @@ public:
     std::vector <KeyFrame*> mvpMergeCandKFs;
 
     double minEigenValue;
+    Eigen::Matrix<double, 6, 6> mHessian;
+
     //bool mbHasHessian;
     //cv::Mat mHessianPose;
     // The following variables need to be accessed trough a mutex to be thread safe.

@@ -22,8 +22,8 @@
 
 #   python ./evaluation/associate.py "$dir"/rgb.txt "$dir"/depth.txt > "$dir"/association.txt
 #   ./Examples/RGB-D/rgbd_tum Vocabulary/ORBvoc.txt "$yaml_file" "$dir"/ "$dir"/association.txt
-#   mv /root/ORB_SLAM3/evaluation/Result/${dir_name}_framePose.txt "$dir"/framePose.txt
-#   mv /root/ORB_SLAM3/evaluation/Result/${dir_name}_frameEigen.txt "$dir"/frameEigen.txt
+#   mv /root/Thesis_code/evaluateEigen/Result/${dir_name}_framePose.txt "$dir"/framePose.txt
+#   mv /root/Thesis_code/evaluateEigen/Result/${dir_name}_frameEigen.txt "$dir"/frameEigen.txt
   
 #   echo "$dir_name done"
 # done
@@ -36,7 +36,7 @@
 # for dir in "${directories[@]}"; do
 
 #   echo "$dir Start Calculate Error"
-#   python ./evaluate.py "$dir"/groundtruth.txt "$dir"/framePose.txt --offset 0 --scale 1 --verbose
+#   python ./evaluateEigen/evaluate.py "$dir"/groundtruth.txt "$dir"/framePose.txt --offset 0 --scale 1 --verbose
 #   mv trans_error.txt "$dir"/trans_error.txt
 #   echo "$dir_name done"
 # done
@@ -64,8 +64,8 @@
 
 #   python ./evaluation/associate.py "$dir"/rgb.txt "$dir"/depth.txt > "$dir"/association.txt
 #   ./Examples/RGB-D/rgbd_tum Vocabulary/ORBvoc.txt "$yaml_file" "$dir"/ "$dir"/association.txt
-#   mv /root/ORB_SLAM3/evaluation/Result/${dir_name}_framePose.txt "$dir"/framePose.txt
-#   mv /root/ORB_SLAM3/evaluation/Result/${dir_name}_frameEigen.txt "$dir"/frameEigen.txt
+#   mv /root/Thesis_code/evaluateEigen/Result/${dir_name}_framePose.txt "$dir"/framePose.txt
+#   mv /root/Thesis_code/evaluateEigen/Result/${dir_name}_frameEigen.txt "$dir"/frameEigen.txt
   
 #   echo "$dir_name done"
 # done
@@ -74,7 +74,7 @@
 # for dir in "${directories[@]}"; do
 
 #   echo "$dir Start Calculate Error"
-#   python ./evaluation/evaluate.py "$dir"/groundtruth.txt "$dir"/framePose.txt --offset 0 --scale 1 --verbose
+#   python ./evaluateEigen/evaluate.py "$dir"/groundtruth.txt "$dir"/framePose.txt --offset 0 --scale 1 --verbose
 #   mv trans_error.txt "$dir"/trans_error.txt
 #   echo "$dir_name done"
 # done
@@ -102,8 +102,8 @@ for dir in "${directories[@]}"; do
 
   python ./evaluation/associate.py "$dir"/rgb.txt "$dir"/depth.txt > "$dir"/association.txt
   ./Examples/RGB-D/rgbd_tum Vocabulary/ORBvoc.txt "$yaml_file" "$dir"/ "$dir"/association.txt
-  mv /root/ORB_SLAM3/evaluation/Result/${dir_name}_framePose.txt "$dir"/framePose.txt
-  mv /root/ORB_SLAM3/evaluation/Result/${dir_name}_frameEigen.txt "$dir"/frameEigen.txt
+  mv /root/Thesis_code/evaluateEigen/Result/${dir_name}_framePose.txt "$dir"/framePose.txt
+  mv /root/Thesis_code/evaluateEigen/Result/${dir_name}_frameEigen.txt "$dir"/frameEigen.txt
   
   echo "$dir_name done"
 done
@@ -112,7 +112,7 @@ done
 for dir in "${directories[@]}"; do
 
   echo "$dir Start Calculate Error"
-  python ./evaluation/evaluate.py "$dir"/groundtruth.txt "$dir"/framePose.txt --offset 0 --scale 1 --verbose
+  python ./evaluateEigen/evaluate.py "$dir"/groundtruth.txt "$dir"/framePose.txt --offset 0 --scale 1 --verbose
   mv trans_error.txt "$dir"/trans_error.txt
   echo "$dir_name done"
 done

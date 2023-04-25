@@ -1141,6 +1141,7 @@ int Optimizer::PoseOptimization(Frame *pFrame)
             SE3quat_recov.translation().cast<float>());
     pFrame->SetPose(pose);
     pFrame->minEigenValue = minEigenvalue;
+    pFrame->mHessian = H;
     
     return nInitialCorrespondences-nBad;
 }

@@ -966,8 +966,8 @@ void System::SaveFrameInfo(const string &filename)
     auto eigens = mpTracker->mFrameEigens;
     // Transform all keyframes so that the first keyframe is at the origin.
     // After a loop closure the first keyframe might not be at the origin.
-    const string posefile = filename + "-framePose.txt";
-    const string eigenfile = filename + "-frameEigen.txt";
+    const string posefile = filename + "_framePose.txt";
+    const string eigenfile = filename + "_frameEigen.txt";
 
     ofstream f;
     f.open(posefile.c_str());

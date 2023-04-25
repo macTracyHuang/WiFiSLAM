@@ -145,6 +145,7 @@ public:
 
     vector<pair<double, Sophus::SE3<float>>> mFramePoses;
     vector<double> mFrameEigens;
+    vector<Eigen::Matrix<double, 6, 6>> mFrameHessians;
 
     // Input sensor
     int mSensor;

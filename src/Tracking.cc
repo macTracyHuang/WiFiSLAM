@@ -2377,6 +2377,7 @@ void Tracking::Track()
                         // set lostPose very large value
                         lostPose.translation() = Eigen::Vector3f(0, -10, 0);
                         mFramePoses.push_back(make_pair(mCurrentFrame.mTimeStamp, lostPose));
+                        mFrameHessians.push_back(mCurrentFrame.mHessian);
                     }
                 }
             }
@@ -2596,6 +2597,7 @@ void Tracking::Track()
                     // set lostPose very large value
                     lostPose.translation() = Eigen::Vector3f(0, -10, 0);
                     mFramePoses.push_back(make_pair(mCurrentFrame.mTimeStamp, lostPose));
+                    mFrameHessians.push_back(mCurrentFrame.mHessian);
             }
             else
             {
@@ -2634,6 +2636,7 @@ void Tracking::Track()
             mState = OK;
             mFrameEigens.push_back(mCurrentFrame.minEigenValue);
             mFramePoses.push_back({mCurrentFrame.mTimeStamp, mCurrentFrame.GetPose()});
+            mFrameHessians.push_back(mCurrentFrame.mHessian);
         }
         else if (mState == OK)  // 由上图可知只有当第一阶段跟踪成功，但第二阶段局部地图跟踪失败时执行
         {
