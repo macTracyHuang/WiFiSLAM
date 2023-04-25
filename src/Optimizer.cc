@@ -1119,13 +1119,29 @@ int Optimizer::PoseOptimization(Frame *pFrame)
             break;
     }    
 
+
+    // Calculate Hessian matrix and get eigenvalues
+    // cout << "=============================" << endl;
+    Eigen::Matrix<double, 6, 6> H = Eigen::Matrix<double, 6, 6>::Zero();
+    for (auto &e: vpEdgesMono){
+        auto h = e->GetHessian();
+        H += h;
+    }
+
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 6, 6>> eigSolver;
+    eigSolver.compute(H);
+    auto eigens = eigSolver.eigenvalues().real();
+    auto minEigenvalue = eigens.minCoeff();
+    // std::cout << "minEigenvalue: " << minEigenvalue << std::endl;
+
     // Recover optimized pose and return number of inliers
     g2o::VertexSE3Expmap* vSE3_recov = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(0));
     g2o::SE3Quat SE3quat_recov = vSE3_recov->estimate();
     Sophus::SE3<float> pose(SE3quat_recov.rotation().cast<float>(),
             SE3quat_recov.translation().cast<float>());
     pFrame->SetPose(pose);
-
+    pFrame->minEigenValue = minEigenvalue;
+    
     return nInitialCorrespondences-nBad;
 }
 

@@ -143,6 +143,9 @@ public:
     eTrackingState mState;
     eTrackingState mLastProcessedState;
 
+    vector<pair<double, Sophus::SE3<float>>> mFramePoses;
+    vector<double> mFrameEigens;
+
     // Input sensor
     int mSensor;
 

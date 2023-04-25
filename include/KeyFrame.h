@@ -434,6 +434,7 @@ public:
     std::vector <KeyFrame*> mvpLoopCandKFs;
     std::vector <KeyFrame*> mvpMergeCandKFs;
 
+    double minEigenValue;
     //bool mbHasHessian;
     //cv::Mat mHessianPose;
     // The following variables need to be accessed trough a mutex to be thread safe.

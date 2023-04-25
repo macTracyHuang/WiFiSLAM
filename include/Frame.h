@@ -241,6 +241,7 @@ public:
     static float invfx;
     static float invfy;
     cv::Mat mDistCoef;
+    double minEigenValue;
 
     // Stereo baseline multiplied by fx.
     float mbf;

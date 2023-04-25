@@ -2372,6 +2372,11 @@ void Tracking::Track()
                     else
                     {
                         mState = LOST;
+                        mFrameEigens.push_back(mCurrentFrame.minEigenValue);
+                        Sophus::SE3<float> lostPose;
+                        // set lostPose very large value
+                        lostPose.translation() = Eigen::Vector3f(0, -10, 0);
+                        mFramePoses.push_back(make_pair(mCurrentFrame.mTimeStamp, lostPose));
                     }
                 }
             }
@@ -2586,6 +2591,11 @@ void Tracking::Track()
                 }
                 if(!bOK)
                     std::cout << "Fail to track local map!" << endl;
+                    mFrameEigens.push_back(mCurrentFrame.minEigenValue);
+                    Sophus::SE3<float> lostPose;
+                    // set lostPose very large value
+                    lostPose.translation() = Eigen::Vector3f(0, -10, 0);
+                    mFramePoses.push_back(make_pair(mCurrentFrame.mTimeStamp, lostPose));
             }
             else
             {
@@ -2619,9 +2629,12 @@ void Tracking::Track()
         //                             \---重定位失败---非OK（传不到这里，因为直接return了）
         // 由上图可知当前帧的状态OK的条件是跟踪局部地图成功，重定位或正常跟踪都可
         // Step 8 根据上面的操作来判断是否追踪成功
-        if(bOK)
+        if(bOK){
             // 此时还OK才说明跟踪成功了
             mState = OK;
+            mFrameEigens.push_back(mCurrentFrame.minEigenValue);
+            mFramePoses.push_back({mCurrentFrame.mTimeStamp, mCurrentFrame.GetPose()});
+        }
         else if (mState == OK)  // 由上图可知只有当第一阶段跟踪成功，但第二阶段局部地图跟踪失败时执行
         {
             // 状态变为最近丢失

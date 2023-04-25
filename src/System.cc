@@ -33,6 +33,7 @@
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
 // #include <wifi_scan/Fingerprint.h>
+#include "Optimizer.h"
 
 namespace ORB_SLAM3
 {
@@ -953,6 +954,47 @@ void System::SaveTrajectoryTUM(const string &filename)
     f.close();
     // cout << endl << "trajectory saved!" << endl;
 }
+
+void System::SaveFrameInfo(const string &filename)
+{
+    cout << endl << "Saving keyframe Info..." << endl;
+
+    // vector<KeyFrame*> vpKFs = mpAtlas->GetAllKeyFrames();
+    // sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
+
+    auto poses = mpTracker->mFramePoses;
+    auto eigens = mpTracker->mFrameEigens;
+    // Transform all keyframes so that the first keyframe is at the origin.
+    // After a loop closure the first keyframe might not be at the origin.
+    const string posefile = filename + "-framePose.txt";
+    const string eigenfile = filename + "-frameEigen.txt";
+
+    ofstream f;
+    f.open(posefile.c_str());
+    f << fixed;
+
+    ofstream f2;
+    f2.open(eigenfile.c_str());
+    f2 << fixed;
+
+    for(size_t i=0; i<poses.size(); i++)
+    {
+        auto timeStamp = poses[i].first;
+        auto pose = poses[i].second;
+        auto eigen = eigens[i];
+        Sophus::SE3f Twc = pose.inverse();
+        Eigen::Quaternionf q = Twc.unit_quaternion();
+        Eigen::Vector3f t = Twc.translation();
+
+        f << setprecision(6) << timeStamp << setprecision(7) << " " << t(0) << " " << t(1) << " " << t(2)
+          << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w()  << endl;        
+        f2 << setprecision(6) << timeStamp << setprecision(7) << " " << eigen << endl;
+    }
+    
+    f2.close();
+    f.close();
+}
+
 
 /**
  * @brief save key frame traj that's loc by pure wifi

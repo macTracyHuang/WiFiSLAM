@@ -55,6 +55,25 @@ public:
 
     virtual void linearizeOplus();
 
+    // add by tm
+    Eigen::Matrix<double, 2, 6> GetJacobian()
+    {
+        linearizeOplus();
+        Eigen::Matrix<double, 2, 6> J;
+        J = _jacobianOplusXi;
+        return J;
+    }
+
+    Eigen::Matrix<double, 6, 6> GetHessian()
+    {
+        linearizeOplus();
+        Eigen::Matrix<double, 2, 6> J;
+        J = _jacobianOplusXi;
+        // return J.transpose() * information() * J;
+        return J.transpose() * J;
+    }
+
+
     Eigen::Vector3d Xw;
     GeometricCamera *pCamera;
 };
