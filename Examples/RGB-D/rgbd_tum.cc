@@ -20,7 +20,7 @@
 #include<algorithm>
 #include<fstream>
 #include<chrono>
-
+#include <sstream>
 #include<opencv2/core/core.hpp>
 
 #include<System.h>
@@ -29,6 +29,17 @@ using namespace std;
 
 void LoadImages(const string &strAssociationFilename, vector<string> &vstrImageFilenamesRGB,
                 vector<string> &vstrImageFilenamesD, vector<double> &vTimestamps);
+
+const std::vector<std::string> split(const std::string &str, const char &delimiter) {
+    std::vector<std::string> result;
+    std::stringstream ss(str);
+    std::string tok;
+
+    while (std::getline(ss, tok, delimiter)) {
+        result.push_back(tok);
+    }
+    return result;
+}
 
 int main(int argc, char **argv)
 {
@@ -188,11 +199,14 @@ int main(int argc, char **argv)
     std::cout << "median tracking time: " << vTimesTrack[nImages/2] << endl;
     std::cout << "mean tracking time: " << totaltime/nImages << endl;
 
-    // Save camera trajectory
-    SLAM.SaveTrajectoryTUM("CameraTrajectory.txt");
-    SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
-    SLAM.SavePointcloudMap();  
+    // // Save camera trajectory
+    // SLAM.SaveTrajectoryTUM("CameraTrajectory.txt");
+    // SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
+    // SLAM.SavePointcloudMap();  
 
+    std::vector<std::string> ret = split(string(argv[3]), '/');
+    std::string prefix = ret[ret.size()-1];
+    SLAM.SaveFrameInfo("/root/ORB_SLAM3/evaluation/Ground_truth/" + prefix);
     return 0;
 }
 
