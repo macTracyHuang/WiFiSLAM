@@ -243,7 +243,7 @@ public:
     cv::Mat mDistCoef;
     double minEigenValue;
     Eigen::Matrix<double, 6, 6> mHessian;
-    Eigen::Matrix<double, 3, 3> mWiFiHessian;
+    Eigen::Matrix<double, 6, 6> mWiFiHessian;
 
     // Stereo baseline multiplied by fx.
     float mbf;

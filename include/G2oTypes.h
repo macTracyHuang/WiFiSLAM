@@ -1031,20 +1031,20 @@ class ApEdge: public g2o::BaseBinaryEdge<1, Vector1d, g2o::VertexSBAPointXYZ, g2
     }      
 
 
-        // add by tm
-    Eigen::Matrix<double, 1, 3> GetJacobian()
+    // add by tm
+    Eigen::Matrix<double, 1, 6> GetJacobian()
     {
         linearizeOplus();
-        Eigen::Matrix<double, 1, 3> J;
-        J = _jacobianOplusXi;
+        Eigen::Matrix<double, 1, 6> J;
+        J = _jacobianOplusXj;
         return J;
     }
 
-    Eigen::Matrix<double, 3, 3> GetHessian()
+    Eigen::Matrix<double, 6, 6> GetHessian()
     {
         linearizeOplus();
-        Eigen::Matrix<double, 1, 3> J;
-        J = _jacobianOplusXi;
+        Eigen::Matrix<double, 1, 6> J;
+        J = _jacobianOplusXj;
         // return J.transpose() * information() * J;
         return J.transpose() * J;
     }

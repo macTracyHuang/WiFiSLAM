@@ -436,7 +436,7 @@ public:
 
     double minEigenValue;
     Eigen::Matrix<double, 6, 6> mHessian;
-    Eigen::Matrix<double, 3, 3> mWiFiHessian;
+    Eigen::Matrix<double, 6, 6> mWiFiHessian;
 
     //bool mbHasHessian;
     //cv::Mat mHessianPose;

@@ -2132,9 +2132,6 @@ void Tracking::Track()
     {
         Verbose::PrintMess("Track With WiFi", Verbose::VERBOSITY_DEBUG);
         bWiFiOK = TrackWithWiFi();
-
-        // cout << "test lock" <<endl;
-        // cout << mCurrentFrame.mpFingerprint->mvAp[0]->Observations() <<endl;
     }
     else
         Verbose::PrintMess("Track Without WiFi", Verbose::VERBOSITY_DEBUG);
@@ -2602,7 +2599,7 @@ void Tracking::Track()
             else
             {
                 std::cout << "Wifi ok in step 7, do not TrackLocalMap" << endl;
-                std::cout << mCurrentFrame.mWiFiHessian << std::endl;
+                // std::cout << mCurrentFrame.mWiFiHessian << std::endl;
             }
         }
         else

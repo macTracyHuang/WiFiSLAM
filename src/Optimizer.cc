@@ -1273,7 +1273,7 @@ int Optimizer::PosePureWifiOptimization(Frame *pFrame)
 
     // Calculate Hessian matrix and get eigenvalues
     // cout << "=============================" << endl;
-    Eigen::Matrix<double, 3, 3> H = Eigen::Matrix<double, 3, 3>::Zero();
+    Eigen::Matrix<double, 6, 6> H = Eigen::Matrix<double, 6, 6>::Zero();
     for (auto &e: vpApEdges){
         auto h = e->GetHessian();
         H += h;

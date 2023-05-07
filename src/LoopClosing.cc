@@ -644,8 +644,11 @@ bool LoopClosing::NewDetectCommonRegions()
             auto candHessian = candFrame->mHessian;
             auto diff = candHessian - mpCurrentKF->mHessian;
             auto norm = diff.norm();
-            // if (norm == 0)
-            //     continue;
+            if (norm == 0){
+                // std::cout << mpLastCurrentKF->mHessian << std::endl;
+                continue;
+            }
+                
             std::cout << "Loop Hessian similarity: " << norm << std::endl;
 
             auto candWiFiHessian = candFrame->mWiFiHessian;
@@ -653,38 +656,40 @@ bool LoopClosing::NewDetectCommonRegions()
             auto normWiFi = diffWiFi.norm();
             std::cout << "Loop WiFi Hessian similarity: " << normWiFi << std::endl;
         }
+
+        // non loop frame hessian similarity add by tm for false loop experiment
+        long long totalNorm = 0, cnt = 0;
+        long long totalWiFiNorm = 0, cntWiFi = 0;
+
+        for (auto &candFrame:mpCurrentKF->GetMap()->GetAllKeyFrames()){
+            auto candHessian = candFrame->mHessian;
+            auto diff = candHessian - mpCurrentKF->mHessian;
+            auto norm = diff.norm();
+            // std::cout << "Hessian similarity: " << norm << std::endl;
+
+            auto candWiFiHessian = candFrame->mWiFiHessian;
+            auto diffWiFi = candWiFiHessian - mpCurrentKF->mWiFiHessian;
+            auto normWiFi = diffWiFi.norm();
+
+            if (norm != 0){
+                totalNorm += norm;
+                cnt++;
+            }
+
+            if (normWiFi != 0){
+                totalWiFiNorm += normWiFi;
+                cntWiFi++;
+            }
+        }
+        auto wifiavg = (cntWiFi == 0) ? 0 : totalWiFiNorm / cntWiFi;
+        std::cout << "Average Hessian similarity: " << totalNorm / cnt << std::endl;
+        std::cout << "Average WiFi Hessian similarity: " << wifiavg << std::endl;
         // end add by tm
 
         return true;
     }
     
-    // non loop frame hessian similarity add by tm for false loop experiment
-    long long totalNorm = 0, cnt = 0;
-    long long totalWiFiNorm = 0, cntWiFi = 0;
-
-    for (auto &candFrame:mpCurrentKF->GetMap()->GetAllKeyFrames()){
-        auto candHessian = candFrame->mHessian;
-        auto diff = candHessian - mpCurrentKF->mHessian;
-        auto norm = diff.norm();
-        // std::cout << "Hessian similarity: " << norm << std::endl;
-
-        auto candWiFiHessian = candFrame->mWiFiHessian;
-        auto diffWiFi = candWiFiHessian - mpCurrentKF->mWiFiHessian;
-        auto normWiFi = diffWiFi.norm();
-
-        if (norm != 0){
-            totalNorm += norm;
-            cnt++;
-        }
-
-        if (normWiFi != 0){
-            totalWiFiNorm += normWiFi;
-            cntWiFi++;
-        }
-    }
-    auto wifiavg = (cntWiFi == 0) ? 0 : totalWiFiNorm / cntWiFi;
-    std::cout << "Average Hessian similarity: " << totalNorm / cnt << std::endl;
-    std::cout << "Average WiFi Hessian similarity: " << wifiavg << std::endl;
+    
 
     // 如果没检测到则把当前关键帧erase(不参与后续共同区域检测)
     mpCurrentKF->SetErase();

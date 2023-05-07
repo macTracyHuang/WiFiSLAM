@@ -239,7 +239,7 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeSt
     :mpcpi(NULL),mpORBvocabulary(voc),mpORBextractorLeft(extractor),mpORBextractorRight(static_cast<ORBextractor*>(NULL)),
      mTimeStamp(timeStamp), mK(K.clone()), mK_(Converter::toMatrix3f(K)),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth),
      mImuCalib(ImuCalib), mpImuPreintegrated(NULL), mpPrevFrame(pPrevF), mpImuPreintegratedFrame(NULL), mpReferenceKF(static_cast<KeyFrame*>(NULL)), mbIsSet(false), mbImuPreintegrated(false),
-     mpCamera(pCamera),mpCamera2(nullptr), mbHasPose(false), mbHasVelocity(false),mbHasPoseWifi(false), minEigenValue(0.0), mHessian(Eigen::Matrix<double, 6, 6>::Zero()), mWiFiHessian(Eigen::Matrix<double, 3, 3>::Zero())
+     mpCamera(pCamera),mpCamera2(nullptr), mbHasPose(false), mbHasVelocity(false),mbHasPoseWifi(false), minEigenValue(0.0), mHessian(Eigen::Matrix<double, 6, 6>::Zero()), mWiFiHessian(Eigen::Matrix<double, 6, 6>::Zero())
 {
     // Frame ID
     // Step 1 帧的ID 自增
