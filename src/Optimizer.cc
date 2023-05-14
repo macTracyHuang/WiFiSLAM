@@ -1130,9 +1130,8 @@ int Optimizer::PoseOptimization(Frame *pFrame)
 
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 6, 6>> eigSolver;
     eigSolver.compute(H);
-    auto eigens = eigSolver.eigenvalues().real();
-    auto minEigenvalue = eigens.minCoeff();
-    // std::cout << "minEigenvalue: " << minEigenvalue << std::endl;
+    // auto eigens = eigSolver.eigenvalues();
+    Eigen::VectorXd eigenvalues = eigSolver.eigenvalues();
 
     // Recover optimized pose and return number of inliers
     g2o::VertexSE3Expmap* vSE3_recov = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(0));
@@ -1140,9 +1139,13 @@ int Optimizer::PoseOptimization(Frame *pFrame)
     Sophus::SE3<float> pose(SE3quat_recov.rotation().cast<float>(),
             SE3quat_recov.translation().cast<float>());
     pFrame->SetPose(pose);
-    pFrame->minEigenValue = minEigenvalue;
+    pFrame->minEigenValue = eigenvalues;
     pFrame->mHessian = H;
     
+    // if (pFrame->HasWifi()){
+    //     std::cout << "VO: " << pFrame->minEigenValue << std::endl;
+    //     std::cout << "WiFi: " << pFrame->minWiFiEigenValue << std::endl;
+    // }
     return nInitialCorrespondences-nBad;
 }
 
@@ -1279,8 +1282,14 @@ int Optimizer::PosePureWifiOptimization(Frame *pFrame)
         H += h;
     }
 
-    pFrame->mWiFiHessian = H;
 
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 6, 6>> eigSolver;
+    eigSolver.compute(H);
+    // auto eigens = eigSolver.eigenvalues();
+    Eigen::VectorXd eigenvalues = eigSolver.eigenvalues();
+
+    pFrame->mWiFiHessian = H;
+    pFrame->minWiFiEigenValue = eigenvalues;
     Verbose::PrintMess("End PosePureWifiOptimization", Verbose::VERBOSITY_DEBUG);
     
     return nEdges;

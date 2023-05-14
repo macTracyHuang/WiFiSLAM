@@ -241,7 +241,8 @@ public:
     static float invfx;
     static float invfy;
     cv::Mat mDistCoef;
-    double minEigenValue;
+    Eigen::VectorXd minEigenValue;
+    Eigen::VectorXd minWiFiEigenValue;
     Eigen::Matrix<double, 6, 6> mHessian;
     Eigen::Matrix<double, 6, 6> mWiFiHessian;
 

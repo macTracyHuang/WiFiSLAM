@@ -2417,7 +2417,7 @@ void Tracking::Track()
                             if (bWiFiOK)
                             {
                                 std::cout << "Track With WiFi OK" << std::endl;
-                                // mCurrentFrame.SetPose(mCurrentFrame.GetPoseWifi());
+                                mCurrentFrame.SetPose(mCurrentFrame.GetPoseWifi());
                                 bOK = true;
                             }
                         }
@@ -2456,8 +2456,9 @@ void Tracking::Track()
 
         }
         else  // 纯定位模式
-        {
+        {  
 
+            std::cout << "Pure Localization Mode" << std::endl;
             // Localization Mode: Local Mapping is deactivated (TODO Not available in inertial mode)
             // 只进行跟踪tracking，局部地图不工作
             // if(mState == LOST)
@@ -2598,7 +2599,8 @@ void Tracking::Track()
             }
             else
             {
-                std::cout << "Wifi ok in step 7, do not TrackLocalMap" << endl;
+                // std::cout << "Wifi ok in step 7, do not TrackLocalMap" << endl;
+                // bOK = TrackLocalMap();
                 // std::cout << mCurrentFrame.mWiFiHessian << std::endl;
             }
         }

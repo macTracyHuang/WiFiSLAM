@@ -434,7 +434,8 @@ public:
     std::vector <KeyFrame*> mvpLoopCandKFs;
     std::vector <KeyFrame*> mvpMergeCandKFs;
 
-    double minEigenValue;
+    Eigen::VectorXd minEigenValue;
+    Eigen::VectorXd minWiFiEigenValue;
     Eigen::Matrix<double, 6, 6> mHessian;
     Eigen::Matrix<double, 6, 6> mWiFiHessian;
 
