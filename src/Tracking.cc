@@ -2411,6 +2411,19 @@ void Tracking::Track()
                         bOK = Relocalization();
                         //std::cout << "mCurrentFrame.mTimeStamp:" << to_string(mCurrentFrame.mTimeStamp) << std::endl;
                         //std::cout << "mTimeStampLost:" << to_string(mTimeStampLost) << std::endl;
+                        
+                        
+                        // 沒wifi 就lost
+                        // if(!bOK)
+                        // {
+                        //     // 纯视觉模式下重定位失败，状态为LOST
+                        //     std::cout << "Reloc Track Lost, mState changed" << std::endl;
+                        //     mState = LOST;
+                        //     Verbose::PrintMess("Track Lost...", Verbose::VERBOSITY_NORMAL);
+                        //     bOK=false;
+                        // }
+
+                        // 在這邊加入wifi暫時定位 等重定位的機會
                         if (!bOK && bHasWifi)
                         {
                             // bWiFiOK = TrackWithWiFi();
