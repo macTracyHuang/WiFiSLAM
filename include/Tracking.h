@@ -144,8 +144,12 @@ public:
     eTrackingState mLastProcessedState;
 
     vector<pair<double, Sophus::SE3<float>>> mFramePoses;
-    vector<Eigen::VectorXd> mFrameEigens;
+    vector<pair<double, int>> mFrameLost;
+    vector<pair<double, double>> mFrameEigens;
+    vector<pair<double, double>> mFrameWiFiEigens;
+    
     vector<Eigen::Matrix<double, 6, 6>> mFrameHessians;
+    vector<Eigen::Matrix<double, 6, 6>> mFrameWiFiHessians;
 
     // Input sensor
     int mSensor;

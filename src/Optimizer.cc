@@ -1130,16 +1130,23 @@ int Optimizer::PoseOptimization(Frame *pFrame)
 
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 6, 6>> eigSolver;
     eigSolver.compute(H);
-    // auto eigens = eigSolver.eigenvalues();
-    Eigen::VectorXd eigenvalues = eigSolver.eigenvalues();
-
+    auto eigens = eigSolver.eigenvalues();
+    // double eigenvalue = abs(eigSolver.eigenvalues().real().minCoeff());
+    double eigenvalue = abs(eigens[3]);
+    // std::cout << eigens << endl;
+    for (int i = 3; i < eigens.size(); i++)
+    {
+        eigenvalue = min(eigenvalue, abs(eigens[i]));
+    }
     // Recover optimized pose and return number of inliers
     g2o::VertexSE3Expmap* vSE3_recov = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(0));
     g2o::SE3Quat SE3quat_recov = vSE3_recov->estimate();
     Sophus::SE3<float> pose(SE3quat_recov.rotation().cast<float>(),
             SE3quat_recov.translation().cast<float>());
     pFrame->SetPose(pose);
-    pFrame->minEigenValue = eigenvalues;
+
+
+    pFrame->minEigenValue = eigenvalue;
     pFrame->mHessian = H;
     
     // if (pFrame->HasWifi()){
@@ -1157,6 +1164,7 @@ int Optimizer::PoseOptimization(Frame *pFrame)
  */
 int Optimizer::PosePureWifiOptimization(Frame *pFrame)
 {
+    std::cout << "start PosePureWifiOptimization" << endl;
     // Setup optimizer
     g2o::SparseOptimizer optimizer;
     g2o::BlockSolver_6_3::LinearSolverType * linearSolver;
@@ -1271,25 +1279,33 @@ int Optimizer::PosePureWifiOptimization(Frame *pFrame)
         // auto p = pose.inverse().translation();
         // cout << "wifi pos: " << p << endl;
         // cout << "visual pos: " << pFrame->GetPose().translation();
+
+        // Calculate Hessian matrix and get eigenvalues
+        cout << "=============================" << endl;
+        Eigen::Matrix<double, 6, 6> H = Eigen::Matrix<double, 6, 6>::Zero();
+        for (auto &e: vpApEdges){
+            auto h = e->GetHessian();
+            H += h;
+        }
+
+        // std::cout << "start compute eig" << vpApEdges.size() << std::endl;
+        Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 6, 6>> eigSolver;
+        eigSolver.compute(H);
+        // std::cout << "complete compute eig" << std::endl;
+        auto eigens = eigSolver.eigenvalues();
+        double eigenvalue = abs(eigens[3]);
+        // std::cout << eigens << endl;
+        for (int i = 3; i < eigens.size(); i++)
+        {
+            eigenvalue = min(eigenvalue, abs(eigens[i]));
+        }
+        // std::cout << "wifi min eigen: " << eigenvalue << std::endl;
+        // std::cout << "after eigSolver.eigenvalues()" << std::endl;
+
+        pFrame->mWiFiHessian = H;
+        pFrame->minWiFiEigenValue = eigenvalue;
     }
 
-
-    // Calculate Hessian matrix and get eigenvalues
-    // cout << "=============================" << endl;
-    Eigen::Matrix<double, 6, 6> H = Eigen::Matrix<double, 6, 6>::Zero();
-    for (auto &e: vpApEdges){
-        auto h = e->GetHessian();
-        H += h;
-    }
-
-
-    Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 6, 6>> eigSolver;
-    eigSolver.compute(H);
-    // auto eigens = eigSolver.eigenvalues();
-    Eigen::VectorXd eigenvalues = eigSolver.eigenvalues();
-
-    pFrame->mWiFiHessian = H;
-    pFrame->minWiFiEigenValue = eigenvalues;
     Verbose::PrintMess("End PosePureWifiOptimization", Verbose::VERBOSITY_DEBUG);
     
     return nEdges;

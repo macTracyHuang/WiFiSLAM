@@ -537,7 +537,8 @@ bool LoopClosing::NewDetectCommonRegions()
             mg2oMergeSlw = gScw;
             mvpMergeMatchedMPs = vpMatchedMPs;
             // 如果验证数大于等于3则为成功
-            mbMergeDetected = mnMergeNumCoincidences >= 3;
+            // mbMergeDetected = mnMergeNumCoincidences >= 3;
+            mbMergeDetected = false;
         }
         // 如果没找到共同区域(时序验证失败一次)
         else
@@ -620,11 +621,11 @@ bool LoopClosing::NewDetectCommonRegions()
     }
     // Merge candidates
     // Step 4.2 若当前关键帧没有被检测到融合,并且候选帧数量不为0,则对融合候帧进行论文中第8页的2-5步
-    if(!bMergeDetectedInKF && !vpMergeBowCand.empty())
-    {
-        // mnLoopNumCoincidences是成功几何验证的帧数，超过3就认为最终验证成功（mbMergeDetected=true），不超过继续进行时序验证
-        mbMergeDetected = DetectCommonRegionsFromBoW(vpMergeBowCand, mpMergeMatchedKF, mpMergeLastCurrentKF, mg2oMergeSlw, mnMergeNumCoincidences, mvpMergeMPs, mvpMergeMatchedMPs);
-    }
+    // if(!bMergeDetectedInKF && !vpMergeBowCand.empty())
+    // {
+    //     // mnLoopNumCoincidences是成功几何验证的帧数，超过3就认为最终验证成功（mbMergeDetected=true），不超过继续进行时序验证
+    //     mbMergeDetected = DetectCommonRegionsFromBoW(vpMergeBowCand, mpMergeMatchedKF, mpMergeLastCurrentKF, mg2oMergeSlw, mnMergeNumCoincidences, mvpMergeMPs, mvpMergeMatchedMPs);
+    // }
 
 #ifdef REGISTER_TIMES
         std::chrono::steady_clock::time_point time_EndEstSim3_2 = std::chrono::steady_clock::now();

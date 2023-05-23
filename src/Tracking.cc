@@ -2296,6 +2296,7 @@ void Tracking::Track()
         // System is initialized. Track Frame.
         // Step 6 系统成功初始化，下面是具体跟踪过程
         bool bOK;
+        int bVOLost = 0;
 
 #ifdef REGISTER_TIMES
         std::chrono::steady_clock::time_point time_StartPosePred = std::chrono::steady_clock::now();
@@ -2365,16 +2366,12 @@ void Tracking::Track()
                         mState = RECENTLY_LOST;
                         // 记录丢失时间
                         mTimeStampLost = mCurrentFrame.mTimeStamp;
+                        bVOLost = 1;
                     }
                     else
                     {
                         mState = LOST;
-                        mFrameEigens.push_back(mCurrentFrame.minEigenValue);
-                        Sophus::SE3<float> lostPose;
-                        // set lostPose very large value
-                        lostPose.translation() = Eigen::Vector3f(0, -10, 0);
-                        mFramePoses.push_back(make_pair(mCurrentFrame.mTimeStamp, lostPose));
-                        mFrameHessians.push_back(mCurrentFrame.mHessian);
+                        bVOLost = 1;
                     }
                 }
             }
@@ -2402,6 +2399,7 @@ void Tracking::Track()
                             mState = LOST;
                             Verbose::PrintMess("Track Lost...", Verbose::VERBOSITY_NORMAL);
                             bOK=false;
+
                         }
                     }
                     else
@@ -2413,7 +2411,7 @@ void Tracking::Track()
                         //std::cout << "mTimeStampLost:" << to_string(mTimeStampLost) << std::endl;
                         
                         
-                        // 沒wifi 就lost
+                        // // 沒wifi 就lost
                         // if(!bOK)
                         // {
                         //     // 纯视觉模式下重定位失败，状态为LOST
@@ -2421,11 +2419,18 @@ void Tracking::Track()
                         //     mState = LOST;
                         //     Verbose::PrintMess("Track Lost...", Verbose::VERBOSITY_NORMAL);
                         //     bOK=false;
+                        //     bVOLost = 1;
                         // }
 
                         // 在這邊加入wifi暫時定位 等重定位的機會
                         if (!bOK && bHasWifi)
                         {
+                            bVOLost = 1;
+                            // if (mCurrentFrame.HasWifi()){
+                            //     std::cout << "VO: " << mCurrentFrame.minEigenValue << std::endl;
+                            //     std::cout << "WiFi: " << mCurrentFrame.minWiFiEigenValue << std::endl;
+                            // }
+
                             // bWiFiOK = TrackWithWiFi();
                             if (bWiFiOK)
                             {
@@ -2446,6 +2451,7 @@ void Tracking::Track()
                 }
                 else if (mState == LOST)  // 上一帧为最近丢失且重定位失败时
                 {
+                    bVOLost = 1;
                     // Step 6.6 如果是LOST状态
                     // 开启一个新地图
                     Verbose::PrintMess("A new map is started...", Verbose::VERBOSITY_NORMAL);
@@ -2463,6 +2469,14 @@ void Tracking::Track()
 
                     Verbose::PrintMess("done", Verbose::VERBOSITY_NORMAL);
 
+                    if (bHasWifi){
+                        std::cout << bVOLost << endl;
+                        double mnEigen = mCurrentFrame.minEigenValue;
+                        double mnEigenWifi = max(mCurrentFrame.minEigenValue, mCurrentFrame.minWiFiEigenValue);
+                        mFrameEigens.push_back({mCurrentFrame.mTimeStamp, mnEigen});
+                        mFrameWiFiEigens.push_back({mCurrentFrame.mTimeStamp, mnEigenWifi});
+                        mFrameLost.push_back({mCurrentFrame.mTimeStamp, bVOLost});
+                    }
                     return;
                 }
             }
@@ -2603,12 +2617,6 @@ void Tracking::Track()
                 }
                 if(!bOK)
                     std::cout << "Fail to track local map!" << endl;
-                    mFrameEigens.push_back(mCurrentFrame.minEigenValue);
-                    Sophus::SE3<float> lostPose;
-                    // set lostPose very large value
-                    lostPose.translation() = Eigen::Vector3f(0, -10, 0);
-                    mFramePoses.push_back(make_pair(mCurrentFrame.mTimeStamp, lostPose));
-                    mFrameHessians.push_back(mCurrentFrame.mHessian);
             }
             else
             {
@@ -2644,12 +2652,36 @@ void Tracking::Track()
         //                             \---重定位失败---非OK（传不到这里，因为直接return了）
         // 由上图可知当前帧的状态OK的条件是跟踪局部地图成功，重定位或正常跟踪都可
         // Step 8 根据上面的操作来判断是否追踪成功
+
+        if (!bOK){
+            bVOLost = 1;
+        }
+
+        if (bHasWifi){
+            double mnEigen = mCurrentFrame.minEigenValue;
+            double mnEigenWifi = max(mCurrentFrame.minEigenValue, mCurrentFrame.minWiFiEigenValue);
+            std::cout << "bVOLost" << bVOLost << endl;
+            mFrameEigens.push_back({mCurrentFrame.mTimeStamp, mnEigen});
+            mFrameWiFiEigens.push_back({mCurrentFrame.mTimeStamp, mnEigenWifi});
+            mFrameLost.push_back({mCurrentFrame.mTimeStamp, bVOLost});
+        }
+        
+
         if(bOK){
             // 此时还OK才说明跟踪成功了
             mState = OK;
-            mFrameEigens.push_back(mCurrentFrame.minEigenValue);
-            mFramePoses.push_back({mCurrentFrame.mTimeStamp, mCurrentFrame.GetPose()});
-            mFrameHessians.push_back(mCurrentFrame.mHessian);
+
+            // double mnEigen = 1e10, mnEigenWifi = 1e10;
+
+            // for (int i = 0; i < 6 ; i++){
+            //     mnEigen = min({mCurrentFrame.minEigenValue[i], mnEigen});
+            //     mnEigenWifi = min({mCurrentFrame.minEigenValue[i], mCurrentFrame.minWiFiEigenValue[i], mnEigenWifi});
+            // }
+            // mFrameEigens.push_back({mCurrentFrame.mTimeStamp, mnEigen});
+            // mFrameWiFiEigens.push_back({mCurrentFrame.mTimeStamp, mnEigenWifi});
+            // mFrameLost.push_back({mCurrentFrame.mTimeStamp, bVOLost});
+            // mFramePoses.push_back({mCurrentFrame.mTimeStamp, mCurrentFrame.GetPose()});
+            // mFrameHessians.push_back(mCurrentFrame.mHessian);
         }
         else if (mState == OK)  // 由上图可知只有当第一阶段跟踪成功，但第二阶段局部地图跟踪失败时执行
         {

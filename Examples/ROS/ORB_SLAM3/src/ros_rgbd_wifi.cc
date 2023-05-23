@@ -111,6 +111,7 @@ int main(int argc, char **argv)
     SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
     SLAM.SaveKeyFrameWiFiTrajectoryTUM("KeyFrameWiFiTrajectory.txt");
     SLAM.SaveApPlot("APPLOT.csv");
+    SLAM.SaveFrameInfo("FrameInfo");
     // SLAM.SaveApInfo("APINFO.txt");
     // SLAM.SavePointcloudMap();
 

@@ -957,42 +957,52 @@ void System::SaveTrajectoryTUM(const string &filename)
 
 void System::SaveFrameInfo(const string &filename)
 {
-    cout << endl << "Saving keyframe Info..." << endl;
+    cout << endl << "Saving frame Info..." << endl;
 
     // vector<KeyFrame*> vpKFs = mpAtlas->GetAllKeyFrames();
     // sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
 
-    auto poses = mpTracker->mFramePoses;
+    auto isLost = mpTracker->mFrameLost;
     auto eigens = mpTracker->mFrameEigens;
+    auto wifigiens = mpTracker->mFrameWiFiEigens;
+
+    // if (isLost.size() != eigens.size() || isLost.size() != wifigiens.size() || eigens.size() != wifigiens.size())
+    // {
+    //     cerr << "ERROR: SaveFrameInfo: size not equal!" << endl;
+    //     return;
+    // }
+
     // Transform all keyframes so that the first keyframe is at the origin.
     // After a loop closure the first keyframe might not be at the origin.
-    const string posefile = filename + "_framePose.txt";
+    // const string posefile = filename + "_framePose.txt";
     const string eigenfile = filename + "_frameEigen.txt";
 
-    ofstream f;
-    f.open(posefile.c_str());
-    f << fixed;
+    // ofstream f;
+    // f.open(posefile.c_str());
+    // f << fixed;
 
     ofstream f2;
     f2.open(eigenfile.c_str());
     f2 << fixed;
 
-    for(size_t i=0; i<poses.size(); i++)
+    for(size_t i=0; i<isLost.size(); i++)
     {
-        auto timeStamp = poses[i].first;
-        auto pose = poses[i].second;
-        auto eigen = eigens[i];
-        Sophus::SE3f Twc = pose.inverse();
-        Eigen::Quaternionf q = Twc.unit_quaternion();
-        Eigen::Vector3f t = Twc.translation();
+        auto timeStamp = isLost[i].first;
+        auto lost = isLost[i].second;
+        auto eigen = eigens[i].second;
+        auto wifieigen = wifigiens[i].second;
 
-        f << setprecision(6) << timeStamp << setprecision(7) << " " << t(0) << " " << t(1) << " " << t(2)
-          << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w()  << endl;        
-        f2 << setprecision(6) << timeStamp << setprecision(7) << " " << eigen << endl;
+        // Sophus::SE3f Twc = pose.inverse();
+        // Eigen::Quaternionf q = Twc.unit_quaternion();
+        // Eigen::Vector3f t = Twc.translation();
+
+        // f << setprecision(6) << timeStamp << setprecision(7) << " " << t(0) << " " << t(1) << " " << t(2)
+        //   << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w()  << endl;        
+        f2 << setprecision(6) << timeStamp << setprecision(7) << " " << lost << " " << eigen << " " << wifieigen << endl;
     }
     
     f2.close();
-    f.close();
+    // f.close();
 }
 
 
