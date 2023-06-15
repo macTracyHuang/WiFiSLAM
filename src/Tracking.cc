@@ -2131,7 +2131,8 @@ void Tracking::Track()
     if (bHasWifi)
     {
         Verbose::PrintMess("Track With WiFi", Verbose::VERBOSITY_DEBUG);
-        bWiFiOK = TrackWithWiFi();
+        // bWiFiOK = TrackWithWiFi();
+        bWiFiOK = TrackWithEKF();
 
         // cout << "test lock" <<endl;
         // cout << mCurrentFrame.mpFingerprint->mvAp[0]->Observations() <<endl;
@@ -3696,6 +3697,51 @@ bool Tracking::TrackWithWiFi()
     int nEdges = Optimizer::PosePureWifiOptimization(&mCurrentFrame);
     // cout << "track wifi nEdges: " << nEdges << endl;
     return nEdges > edge_th;
+}
+
+bool Tracking::TrackWithEKF()
+{
+    Eigen::VectorXd S; // State Vector
+    int nAps = mCurrentFrame.mpFingerprint->mvAp.size();
+    S.resize(2 + 2 * nAps); // robot pose + ap positions (x,y)
+
+    int stateSize = S.size(); // n
+    auto Q = Eigen::MatrixXd::Identity(); // Covariance Matrix
+    Q.resize(stateSize, stateSize); // n*n matrix
+
+    Eigen::Matrix3d F_xy = Eigen::Matrix3d::Identity();
+    F_xy(1,0) = -1 * mVelocity.translation()[0]; // x
+    F_xy(2,0) =  mVelocity.translation()[2]; // y to orb z
+
+    Eigen::MatrixXd F(stateSize, stateSize);
+    F.setZero();
+    F.block(0, 0, F_xy.rows(), F_xy.cols()) = F_xy;
+    F.block(F_xy.rows(), F_xy.cols(), stateSize - F_xy.rows(), stateSize - F_xy.cols()).setIdentity();
+
+    // (9) prediction step
+    auto newPose = mVelocity * mLastFrame.GetPose(); // estimated robot pose
+    auto newX = newPose.translation()[0], newY = newPose.translation()[2]; // x, y
+    S << newX, newY; // robot pose prediction
+
+    // set up ap position prediction
+    auto vAp = mCurrentFrame.mpFingerprint->mvAp;
+
+    for (int i = 0; i < int(vAp.size()); i++){
+        auto ap = vAp[i];
+
+        if (!ap->isInitial)
+            ap->InitializePose();
+
+        auto apPos = ap->GetApPos(); // under world coordinate
+        S << apPos[0], apPos[2]; // ap position prediction
+    }
+
+
+    // Update
+    
+    // auto robotPos = newPose.inverse().translation(); // to world coordinate
+    // auto dis = sqrt(pow(apPos[0] - robotPos[0], 2) + pow(apPos[2] - robotPos[2], 2)); // y to orb z
+    return true;
 }
 
 /**

@@ -1,0 +1,57 @@
+
+ORB-SLAM3 Copyright (C) 2017-2020 Carlos Campos, Richard Elvira, Juan J. Gómez, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
+ORB-SLAM2 Copyright (C) 2014-2016 Raúl Mur-Artal, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
+This program comes with ABSOLUTELY NO WARRANTY;
+This is free software, and you are welcome to redistribute it
+under certain conditions. See LICENSE.txt.
+
+Input sensor was set to: RGB-D
+Loading settings from Examples/RGB-D/RealSense_D435i.yaml
+	-Loaded camera 1
+	-Loaded image info
+	-Loaded RGB-D calibration
+	-Loaded ORB settings
+	-Loaded viewer settings
+savePointCloud: 0
+	-Loaded Atlas settings
+sTurnWifi: 0
+	-Loaded misc parameters
+----------------------------------
+SLAM settings: 
+	-Camera 1 parameters (Pinhole): [ 604.697 604.299 330.383 251.562 ]
+	-Camera 1 distortion parameters: [  0 0 0 0 ]
+	-Original image size: [ 640 , 480 ]
+	-Current image size: [ 640 , 480 ]
+	-Sequence FPS: 15
+	-RGB-D depth map factor: 1000
+	-Features per image: 1000
+	-ORB scale factor: 1.2
+	-ORB number of scales: 6
+	-Initial FAST threshold: 20
+	-Min FAST threshold: 6
+
+
+Loading ORB Vocabulary. This could take a while...
+Vocabulary loaded!
+
+Initialization of Atlas from scratch 
+start to create new map
+Creation of new map with id: 0
+Creation of new map with last KF id: 0
+Seq. Name: 
+There are 1 cameras in the atlas
+Camera 0 is pinhole
+Starting the Viewer
+Shutdown
+mpLocalMapper is not finished
+mpLoopCloser is not finished
+
+Saving keyframe trajectory to KeyFrameTrajectory.txt ...
+
+Successfully Saving keyframe trajectory to KeyFrameTrajectory.txt ...
+
+Saving KeyFrameWiFiTrajectory to KeyFrameWiFiTrajectory.txt ...
+
+Successfully Saving KeyFrameWiFiTrajectory to KeyFrameWiFiTrajectory.txt ...
+
+Saving Ap plot to APPLOT.csv ...

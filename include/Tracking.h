@@ -250,6 +250,7 @@ protected:
 
     // add by tm
     bool TrackWithWiFi();
+    bool TrackWithEKF();
     // end add by tm
     
     // Imu preintegration from last frame
